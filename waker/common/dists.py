@@ -24,4 +24,29 @@ class SampleDist:
     self._dist = dist
     self._samples = samples
 
-  @pr
+  @property
+  def name(self):
+    return 'SampleDist'
+
+  def __getattr__(self, name):
+    return getattr(self._dist, name)
+
+  def mean(self):
+    samples = self._dist.sample(self._samples)
+    return samples.mean(0)
+
+  def mode(self):
+    sample = self._dist.sample(self._samples)
+    logprob = self._dist.log_prob(sample)
+    return tf.gather(sample, tf.argmax(logprob))[0]
+
+  def entropy(self):
+    sample = self._dist.sample(self._samples)
+    logprob = self.log_prob(sample)
+    return -logprob.mean(0)
+
+
+class OneHotDist(tfd.OneHotCategorical):
+
+  def __init__(self, logits=None, probs=None, dtype=None):
+ 
