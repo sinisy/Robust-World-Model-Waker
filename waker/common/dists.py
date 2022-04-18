@@ -108,4 +108,6 @@ class TanhBijector(tfp.bijectors.Bijector):
     y = tf.cast(y, dtype)
     return y
 
-  def _forward_l
+  def _forward_log_det_jacobian(self, x):
+    log2 = tf.math.log(tf.constant(2.0, dtype=x.dtype))
+    return 2.0 * (log2 - x - tf.nn.softplus(-2.0 * x))
