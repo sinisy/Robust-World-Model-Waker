@@ -83,4 +83,29 @@ class TruncNormalDist(tfd.TruncatedNormal):
           event, self.low + self._clip, self.high - self._clip)
       event = event - tf.stop_gradient(event) + tf.stop_gradient(clipped)
     if self._mult:
-  
+      event *= self._mult
+    return event
+
+
+class TanhBijector(tfp.bijectors.Bijector):
+
+  def __init__(self, validate_args=False, name='tanh'):
+    super().__init__(
+        forward_min_event_ndims=0,
+        validate_args=validate_args,
+        name=name)
+
+  def _forward(self, x):
+    return tf.nn.tanh(x)
+
+  def _inverse(self, y):
+    dtype = y.dtype
+    y = tf.cast(y, tf.float32)
+    y = tf.where(
+        tf.less_equal(tf.abs(y), 1.),
+        tf.clip_by_value(y, -0.99999997, 0.99999997), y)
+    y = tf.atanh(y)
+    y = tf.cast(y, dtype)
+    return y
+
+  def _forward_l
