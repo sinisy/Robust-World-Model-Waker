@@ -37,3 +37,17 @@ class Driver:
     eps = []
     while step < steps or episode < episodes:
       if env_sampler is None:
+        obs = {
+            i: self._envs[i].reset(env_sampler, task=task)
+            for i, ob in enumerate(self._obs) if ob is None or ob['is_last']}
+      else:
+        obs = {
+            i: self._envs[i].reset(env_params=env_sampler.get_env_params(), task=task)
+            for i, ob in enumerate(self._obs) if ob is None or ob['is_last']}
+        
+      for i, ob in obs.items():
+        self._obs[i] = ob() if callable(ob) else ob
+        if self._act_is_discrete[i]:
+          act = {k: np.zeros(v.n) for k, v in self._act_spaces[i].items()}
+        else:
+          act = {k: np.zeros(v.shape) for k, v in s
