@@ -50,4 +50,15 @@ class Driver:
         if self._act_is_discrete[i]:
           act = {k: np.zeros(v.n) for k, v in self._act_spaces[i].items()}
         else:
-          act = {k: np.zeros(v.shape) for k, v in s
+          act = {k: np.zeros(v.shape) for k, v in self._act_spaces[i].items()}
+        tran = {k: self._convert(v) for k, v in {**ob, **act}.items()}
+        [fn(tran, worker=i, **self._kwargs) for fn in self._on_resets]
+        self._eps[i] = [tran]
+      obs = {k: np.stack([o[k] for o in self._obs]) for k in self._obs[0]}
+      actions, self._state = policy(obs, self._state, **self._kwargs)
+      actions = [
+          {k: np.array(actions[k][i]) for k in actions}
+          for i in range(len(self._envs))]
+      assert len(actions) == len(self._envs)
+      obs = [e.step(a) for e, a in zip(self._envs, actions)]
+      ob
