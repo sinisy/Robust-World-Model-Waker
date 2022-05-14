@@ -61,4 +61,16 @@ class Driver:
           for i in range(len(self._envs))]
       assert len(actions) == len(self._envs)
       obs = [e.step(a) for e, a in zip(self._envs, actions)]
-      ob
+      obs = [ob() if callable(ob) else ob for ob in obs]
+      for i, (act, ob) in enumerate(zip(actions, obs)):
+        tran = {k: self._convert(v) for k, v in {**ob, **act}.items()}
+        [fn(tran, worker=i, **self._kwargs) for fn in self._on_steps]
+        self._eps[i].append(tran)
+        step += 1
+        if ob['is_last']:
+          ep = self._eps[i]
+          ep = {k: self._convert([t[k] for t in ep]) for k in ep[0]}
+          [fn(ep, self.total_episodes, **self._kwargs) for fn in self._on_episodes]
+          eps.append(ep)
+          episode += 1
+          self.t
