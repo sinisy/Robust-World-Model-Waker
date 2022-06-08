@@ -73,4 +73,17 @@ class Driver:
           [fn(ep, self.total_episodes, **self._kwargs) for fn in self._on_episodes]
           eps.append(ep)
           episode += 1
-          self.t
+          self.total_episodes += 1
+      self._obs = obs
+    [fn(eps, **self._kwargs) for fn in self._on_calls]
+    
+
+  def _convert(self, value):
+    value = np.array(value)
+    if np.issubdtype(value.dtype, np.floating):
+      return value.astype(np.float32)
+    elif np.issubdtype(value.dtype, np.signedinteger):
+      return value.astype(np.int32)
+    elif np.issubdtype(value.dtype, np.uint8):
+      return value.astype(np.uint8)
+    return value
