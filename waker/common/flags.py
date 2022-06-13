@@ -25,4 +25,24 @@ class Flags:
     for arg in argv:
       if arg.startswith('--'):
         if key:
-          self._submit_entry
+          self._submit_entry(key, vals, parsed, remaining)
+        if '=' in arg:
+          key, val = arg.split('=', 1)
+          vals = [val]
+        else:
+          key, vals = arg, []
+      else:
+        if key:
+          vals.append(arg)
+        else:
+          remaining.append(arg)
+    self._submit_entry(key, vals, parsed, remaining)
+    parsed = self._config.update(parsed)
+    if known_only:
+      return parsed, remaining
+    else:
+      for flag in remaining:
+        if flag.startswith('--'):
+          raise ValueError(f"Flag '{flag}' did not match any config keys.")
+      assert not remaining, remaining
+   
