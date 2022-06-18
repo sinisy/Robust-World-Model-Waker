@@ -45,4 +45,20 @@ class Flags:
         if flag.startswith('--'):
           raise ValueError(f"Flag '{flag}' did not match any config keys.")
       assert not remaining, remaining
-   
+      return parsed
+
+  def _submit_entry(self, key, vals, parsed, remaining):
+    if not key and not vals:
+      return
+    if not key:
+      vals = ', '.join(f"'{x}'" for x in vals)
+      raise ValueError(f"Values {vals} were not preceeded by any flag.")
+    name = key[len('--'):]
+    if '=' in name:
+      remaining.extend([key] + vals)
+      return
+    if self._config.IS_PATTERN.match(name):
+      pattern = re.compile(name)
+      keys = {k for k in self._config.flat if pattern.match(k)}
+    elif name in self._config:
+      keys = 
