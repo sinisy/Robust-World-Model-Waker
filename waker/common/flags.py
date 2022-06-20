@@ -61,4 +61,20 @@ class Flags:
       pattern = re.compile(name)
       keys = {k for k in self._config.flat if pattern.match(k)}
     elif name in self._config:
-      keys = 
+      keys = [name]
+    else:
+      keys = []
+    if not keys:
+      remaining.extend([key] + vals)
+      return
+    if not vals:
+      raise ValueError(f"Flag '{key}' was not followed by any values.")
+    for key in keys:
+      parsed[key] = self._parse_flag_value(self._config[key], vals, key)
+
+  def _parse_flag_value(self, default, value, key):
+    value = value if isinstance(value, (tuple, list)) else (value,)
+    if isinstance(default, (tuple, list)):
+      if len(value) == 1 and ',' in value[0]:
+        value = value[0].split(',')
+      return tuple(self._parse_flag_v
