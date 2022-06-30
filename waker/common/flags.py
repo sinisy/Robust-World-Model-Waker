@@ -77,4 +77,18 @@ class Flags:
     if isinstance(default, (tuple, list)):
       if len(value) == 1 and ',' in value[0]:
         value = value[0].split(',')
-      return tuple(self._parse_flag_v
+      return tuple(self._parse_flag_value(default[0], [x], key) for x in value)
+    assert len(value) == 1, value
+    value = str(value[0])
+    if default is None:
+      return value
+    if isinstance(default, bool):
+      try:
+        return bool(['False', 'True'].index(value))
+      except ValueError:
+        message = f"Expected bool but got '{value}' for key '{key}'."
+        raise TypeError(message)
+    if isinstance(default, int):
+      value = float(value)  # Allow scientific notation for integers.
+      if float(int(value)) != value:
+        message = f"Expected int but got float '{value}' for key '{k
