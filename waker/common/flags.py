@@ -91,4 +91,7 @@ class Flags:
     if isinstance(default, int):
       value = float(value)  # Allow scientific notation for integers.
       if float(int(value)) != value:
-        message = f"Expected int but got float '{value}' for key '{k
+        message = f"Expected int but got float '{value}' for key '{key}'."
+        raise TypeError(message)
+      return int(value)
+    return type(default)(value)
