@@ -362,3 +362,58 @@ class DistLayer(common.Module):
     out = tf.reshape(out, tf.concat([tf.shape(inputs)[:-1], self._shape], 0))
     out = tf.cast(out, tf.float32)
     if self._dist in ('normal', 'tanh_normal', 'trunc_normal'):
+      std = self.get('std', tfkl.Dense, np.prod(self._shape))(inputs)
+      std = tf.reshape(std, tf.concat([tf.shape(inputs)[:-1], self._shape], 0))
+      std = tf.cast(std, tf.float32)
+    if self._dist == 'mse':
+      dist = tfd.Normal(out, 1.0)
+      return tfd.Independent(dist, len(self._shape))
+    if self._dist == 'normal':
+      dist = tfd.Normal(out, std)
+      return tfd.Independent(dist, len(self._shape))
+    if self._dist == 'binary':
+      dist = tfd.Bernoulli(out)
+      return tfd.Independent(dist, len(self._shape))
+    if self._dist == 'tanh_normal':
+      mean = 5 * tf.tanh(out / 5)
+      std = tf.nn.softplus(std + self._init_std) + self._min_std
+      dist = tfd.Normal(mean, std)
+      dist = tfd.TransformedDistribution(dist, common.TanhBijector())
+      dist = tfd.Independent(dist, len(self._shape))
+      return common.SampleDist(dist)
+    if self._dist == 'trunc_normal':
+      std = 2 * tf.nn.sigmoid((std + self._init_std) / 2) + self._min_std
+      dist = common.TruncNormalDist(tf.tanh(out), std, -1, 1)
+      return tfd.Independent(dist, 1)
+    if self._dist == 'onehot':
+      return common.OneHotDist(out)
+    raise NotImplementedError(self._dist)
+
+
+class NormLayer(common.Module):
+
+  def __init__(self, name):
+    if name == 'none':
+      self._layer = None
+    elif name == 'layer':
+      self._layer = tfkl.LayerNormalization()
+    else:
+      raise NotImplementedError(name)
+
+  def __call__(self, features):
+    if not self._layer:
+      return features
+    return self._layer(features)
+
+
+def get_act(name):
+  if name == 'none':
+    return tf.identity
+  if name == 'mish':
+    return lambda x: x * tf.math.tanh(tf.nn.softplus(x))
+  elif hasattr(tf.nn, name):
+    return getattr(tf.nn, name)
+  elif hasattr(tf, name):
+    return getattr(tf, name)
+  else:
+    raise NotImplementedError(name)
