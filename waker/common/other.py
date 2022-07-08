@@ -37,4 +37,21 @@ def static_scan(fn, inputs, start, reverse=False):
   if reverse:
     indices = reversed(indices)
   for index in indices:
-    inp = tf.nest.map_s
+    inp = tf.nest.map_structure(lambda x: x[index], inputs)
+    last = fn(last, inp)
+    [o.append(l) for o, l in zip(outputs, tf.nest.flatten(last))]
+  if reverse:
+    outputs = [list(reversed(x)) for x in outputs]
+  outputs = [tf.stack(x, 0) for x in outputs]
+  return tf.nest.pack_sequence_as(start, outputs)
+
+
+def schedule(string, step):
+  try:
+    return float(string)
+  except ValueError:
+    step = tf.cast(step, tf.float32)
+    match = re.match(r'linear\((.+),(.+),(.+)\)', string)
+    if match:
+      initial, final, duration = [float(group) for group in match.groups()]
+      mix = tf.clip_by_value
