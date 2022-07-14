@@ -99,4 +99,19 @@ def lambda_return(
   return returns
 
 
-def ac
+def action_noise(action, amount, act_space):
+  if amount == 0:
+    return action
+  amount = tf.cast(amount, action.dtype)
+  if hasattr(act_space, 'n'):
+    probs = amount / action.shape[-1] + (1 - amount) * action
+    return dists.OneHotDist(probs=probs).sample()
+  else:
+    return tf.clip_by_value(tfd.Normal(action, amount).sample(), -1, 1)
+
+
+class StreamNorm(tfutils.Module):
+
+  def __init__(self, shape=(), momentum=0.99, scale=1.0, eps=1e-8):
+    # Momentum of 0 normalizes only based on the current batch.
+    # Momentum of 1 disables normalization
