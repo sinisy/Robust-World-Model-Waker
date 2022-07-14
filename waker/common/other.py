@@ -67,4 +67,18 @@ def schedule(string, step):
       return (initial - final) * 0.5 ** (step / halflife) + final
     match = re.match(r'horizon\((.+),(.+),(.+)\)', string)
     if match:
-      initial, final, dura
+      initial, final, duration = [float(group) for group in match.groups()]
+      mix = tf.clip_by_value(step / duration, 0, 1)
+      horizon = (1 - mix) * initial + mix * final
+      return 1 - 1 / horizon
+    raise NotImplementedError(string)
+
+
+def lambda_return(
+    reward, value, pcont, bootstrap, lambda_, axis):
+  # Setting lambda=1 gives a discounted Monte Carlo return.
+  # Setting lambda=0 gives a fixed 1-step return.
+  assert reward.shape.ndims == value.shape.ndims, (reward.shape, value.shape)
+  if isinstance(pcont, (int, float)):
+    pcont = pcont * tf.ones_like(reward)
+  dims = l
