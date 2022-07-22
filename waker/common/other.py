@@ -135,4 +135,27 @@ class StreamNorm(tfutils.Module):
     self.mag.assign(tf.ones_like(self.mag))
 
   def update(self, inputs):
-    batch = inputs.reshape((-1,) + self._s
+    batch = inputs.reshape((-1,) + self._shape)
+    mag = tf.abs(batch).mean(0).astype(tf.float64)
+    self.mag.assign(self._momentum * self.mag + (1 - self._momentum) * mag)
+
+  def transform(self, inputs):
+    values = inputs.reshape((-1,) + self._shape)
+    values /= self.mag.astype(inputs.dtype)[None] + self._eps
+    values *= self._scale
+    return values.reshape(inputs.shape)
+
+
+class Timer:
+
+  def __init__(self):
+    self._indurs = collections.defaultdict(list)
+    self._outdurs = collections.defaultdict(list)
+    self._start_times = {}
+    self._end_times = {}
+
+  @contextlib.contextmanager
+  def section(self, name):
+    self.start(name)
+    yield
+    self.
