@@ -180,3 +180,23 @@ class Timer:
 
   def result(self):
     metrics = {}
+    for key in self._indurs:
+      indurs = self._indurs[key]
+      outdurs = self._outdurs[key]
+      metrics[f'timer_count_{key}'] = len(indurs)
+      metrics[f'timer_inside_{key}'] = np.sum(indurs)
+      metrics[f'timer_outside_{key}'] = np.sum(outdurs)
+      indurs.clear()
+      outdurs.clear()
+    return metrics
+
+
+class CarryOverState:
+
+  def __init__(self, fn):
+    self._fn = fn
+    self._state = None
+
+  def __call__(self, *args):
+    self._state, out = self._fn(*args, self._state)
+    return out
