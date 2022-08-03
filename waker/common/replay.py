@@ -127,3 +127,75 @@ class Replay:
     if self._maxlen:
       assert self._minlen <= len(sequence['action']) <= self._maxlen
     return sequence
+
+  def _enforce_limit(self):
+    if not self._capacity:
+      return
+    while self._loaded_episodes > 1 and self._loaded_steps > self._capacity:
+      # Relying on Python preserving the insertion order of dicts.
+      oldest, episode = next(iter(self._complete_eps.items()))
+      self._loaded_steps -= eplen(episode)
+      self._loaded_episodes -= 1
+      del self._complete_eps[oldest]
+
+
+def count_episodes(directory):
+  filenames = list(directory.glob('*.npz'))
+  num_episodes = len(filenames)
+  num_steps = sum(int(str(n).split('-')[-1][:-4]) - 1 for n in filenames)
+  return num_episodes, num_steps
+
+
+def save_episode(directory, episode):
+  timestamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
+  identifier = str(uuid.uuid4().hex)
+  length = eplen(episode)
+  filename = directory / f'{timestamp}-{identifier}-{length}.npz'
+  with io.BytesIO() as f1:
+    np.savez_compressed(f1, **episode)
+    f1.seek(0)
+    with filename.open('wb') as f2:
+      f2.write(f1.read())
+  return filename
+
+
+def load_episodes(directory, capacity=None, minlen=1):
+  # The returned directory from filenames to episodes is guaranteed to be in
+  # temporally sorted order.
+  filenames = sorted(directory.glob('*.npz'))
+  if capacity:
+    num_steps = 0
+    num_episodes = 0
+    for filename in reversed(filenames):
+      length = int(str(filename).split('-')[-1][:-4])
+      num_steps += length
+      num_episodes += 1
+      if num_steps >= capacity:
+        break
+    filenames = filenames[-num_episodes:]
+  episodes = {}
+  for filename in filenames:
+    try:
+      with filename.open('rb') as f:
+        episode = np.load(f)
+        episode = {k: episode[k] for k in episode.keys()}
+    except Exception as e:
+      print(f'Could not load episode {str(filename)}: {e}')
+      continue
+    episodes[str(filename)] = episode
+  return episodes
+
+
+def convert(value):
+  value = np.array(value)
+  if np.issubdtype(value.dtype, np.floating):
+    return value.astype(np.float32)
+  elif np.issubdtype(value.dtype, np.signedinteger):
+    return value.astype(np.int32)
+  elif np.issubdtype(value.dtype, np.uint8):
+    return value.astype(np.uint8)
+  return value
+
+
+def eplen(episode):
+  return len(episode['action']) - 1
