@@ -38,4 +38,16 @@ for base in (tf.Tensor, tf.Variable, values.PerReplica):
 class Module(tf.Module):
 
   def save(self, filename):
-    values = tf.nest.map_structure(lambda x: x.numpy(), sel
+    values = tf.nest.map_structure(lambda x: x.numpy(), self.variables)
+    amount = len(tf.nest.flatten(values))
+    count = int(sum(np.prod(x.shape) for x in tf.nest.flatten(values)))
+    print(f'Save checkpoint with {amount} tensors and {count} parameters.')
+    with pathlib.Path(filename).open('wb') as f:
+      pickle.dump(values, f)
+
+  def load(self, filename):
+    with pathlib.Path(filename).open('rb') as f:
+      values = pickle.load(f)
+    amount = len(tf.nest.flatten(values))
+    count = int(sum(np.prod(x.shape) for x in tf.nest.flatten(values)))
+    print(f'Load checkpoint with {amount} tensors and {count} p
