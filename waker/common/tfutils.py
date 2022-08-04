@@ -50,4 +50,23 @@ class Module(tf.Module):
       values = pickle.load(f)
     amount = len(tf.nest.flatten(values))
     count = int(sum(np.prod(x.shape) for x in tf.nest.flatten(values)))
-    print(f'Load checkpoint with {amount} tensors and {count} p
+    print(f'Load checkpoint with {amount} tensors and {count} parameters.')
+    tf.nest.map_structure(lambda x, y: x.assign(y), self.variables, values)
+
+  def get(self, name, ctor, *args, **kwargs):
+    # Create or get layer by name to avoid mentioning it in the constructor.
+    if not hasattr(self, '_modules'):
+      self._modules = {}
+    if name not in self._modules:
+      self._modules[name] = ctor(*args, **kwargs)
+    return self._modules[name]
+
+
+class Optimizer(tf.Module):
+
+  def __init__(
+      self, name, lr, eps=1e-4, clip=None, wd=None,
+      opt='adam', wd_pattern=r'.*'):
+    assert 0 <= wd < 1
+    assert not clip or 1 <= clip
+ 
