@@ -69,4 +69,16 @@ class Optimizer(tf.Module):
       opt='adam', wd_pattern=r'.*'):
     assert 0 <= wd < 1
     assert not clip or 1 <= clip
- 
+    self._name = name
+    self._clip = clip
+    self._wd = wd
+    self._wd_pattern = wd_pattern
+    self._opt = {
+        'adam': lambda: tf.keras.optimizers.legacy.Adam(lr, epsilon=eps),
+        'nadam': lambda: tf.keras.optimizers.legacy.Nadam(lr, epsilon=eps),
+        'adamax': lambda: tf.keras.optimizers.legacy.Adamax(lr, epsilon=eps),
+        'sgd': lambda: tf.keras.optimizers.legacy.SGD(lr),
+        'momentum': lambda: tf.keras.optimizers.legacy.SGD(lr, 0.9),
+    }[opt]()
+    self._mixed = (prec.global_policy().compute_dtype == tf.float16)
+    if s
