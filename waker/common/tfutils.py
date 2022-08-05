@@ -81,4 +81,20 @@ class Optimizer(tf.Module):
         'momentum': lambda: tf.keras.optimizers.legacy.SGD(lr, 0.9),
     }[opt]()
     self._mixed = (prec.global_policy().compute_dtype == tf.float16)
-    if s
+    if self._mixed:
+      self._opt = prec.LossScaleOptimizer(self._opt, dynamic=True)
+    self._once = True
+
+  @property
+  def variables(self):
+    return self._opt.variables()
+
+  def __call__(self, tape, loss, modules):
+    assert loss.dtype is tf.float32, (self._name, loss.dtype)
+    assert len(loss.shape) == 0, (self._name, loss.shape)
+    metrics = {}
+
+    # Find variables.
+    modules = modules if hasattr(modules, '__len__') else (modules,)
+    varibs = tf.nest.flatten([module.variables for module in modules])
+    count = sum(np.prod(x.shape) for x in varibs)
