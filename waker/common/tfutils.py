@@ -98,3 +98,23 @@ class Optimizer(tf.Module):
     modules = modules if hasattr(modules, '__len__') else (modules,)
     varibs = tf.nest.flatten([module.variables for module in modules])
     count = sum(np.prod(x.shape) for x in varibs)
+    if self._once:
+      print(f'Found {count} {self._name} parameters.')
+      self._once = False
+
+    # Check loss.
+    tf.debugging.check_numerics(loss, self._name + '_loss')
+    metrics[f'{self._name}_loss'] = loss
+
+    # Compute scaled gradient.
+    if self._mixed:
+      with tape:
+        loss = self._opt.get_scaled_loss(loss)
+    grads = tape.gradient(loss, varibs)
+    if self._mixed:
+      grads = self._opt.get_unscaled_gradients(grads)
+    if self._mixed:
+      metrics[f'{self._name}_loss_scale'] = self._opt.loss_scale
+
+    # Distributed sync.
+    context = tf.distribute.get_replica_co
