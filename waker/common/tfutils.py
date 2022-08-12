@@ -117,4 +117,27 @@ class Optimizer(tf.Module):
       metrics[f'{self._name}_loss_scale'] = self._opt.loss_scale
 
     # Distributed sync.
-    context = tf.distribute.get_replica_co
+    context = tf.distribute.get_replica_context()
+    if context:
+      grads = context.all_reduce('mean', grads)
+
+    # Gradient clipping.
+    norm = tf.linalg.global_norm(grads)
+    if not self._mixed:
+      tf.debugging.check_numerics(norm, self._name + '_norm')
+    if self._clip:
+      grads, _ = tf.clip_by_global_norm(grads, self._clip, norm)
+    metrics[f'{self._name}_grad_norm'] = norm
+
+    # Weight decay.
+    if self._wd:
+      self._apply_weight_decay(varibs)
+
+    # Apply gradients.
+    self._opt.apply_gradients(
+        zip(grads, varibs),
+        experimental_aggregate_gradients=False)
+
+    return metrics
+
+  def _apply
