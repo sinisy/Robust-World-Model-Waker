@@ -1,0 +1,17 @@
+
+defaults:
+  wandb: True
+  group: "default"
+
+  # Train Script
+  logdir: /dev/null
+  policy_logdir: /dev/null
+  seed: 0
+  task: dmc_walker_walk
+  observation: image
+  envs: 1
+  render_size: [64, 64]
+  dmc_camera: -1
+  atari_grayscale: True
+  time_limit: 0
+  action_repeat: 1
