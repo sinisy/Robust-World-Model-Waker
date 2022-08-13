@@ -41,4 +41,23 @@ class Agent(common.Module):
     embed = self.wm.encoder(self.wm.preprocess(obs))
     sample = (mode == 'train') or not self.config.eval_state_mean
     latent, _ = self.wm.rssm.obs_step(
-        latent, action, embe
+        latent, action, embed, obs['is_first'], sample)
+    feat = self.wm.rssm.get_feat(latent)
+    if mode == 'eval':
+      if task == '':
+        actor = self._task_behavior.actor(feat)
+      else:
+        actor = self._task_behavior[task].actor(feat)
+      action = actor.mode()
+      noise = self.config.eval_noise
+    elif mode == 'explore':
+      actor = self._expl_behavior.actor(feat)
+      action = actor.sample()
+      noise = self.config.expl_noise
+    elif mode == 'train':
+      if task == '':
+        actor = self._task_behavior.actor(feat)
+      else:
+        actor = self._task_behavior[task].actor(feat)
+      action = actor.sample()
+      noise = s
