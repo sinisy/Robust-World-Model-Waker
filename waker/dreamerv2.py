@@ -26,4 +26,19 @@ class Agent(common.Module):
     else:
       self._expl_behavior = getattr(expl, config.expl_behavior)(
           self.config, self.act_space, self.wm, self.tfstep,
-          lambda seq: self.wm.heads['rewa
+          lambda seq: self.wm.heads['reward'](seq['feat']).mode())
+
+  @tf.function
+  def policy(self, obs, state=None, mode='train', task=''):
+    obs = tf.nest.map_structure(tf.tensor, obs)
+    tf.py_function(lambda: self.tfstep.assign(
+        int(self.step), read_value=False), [], [])
+    if state is None:
+      latent = self.wm.rssm.initial(len(obs['reward']))
+      action = tf.zeros((len(obs['reward']),) + self.act_space.shape)
+      state = latent, action
+    latent, action = state
+    embed = self.wm.encoder(self.wm.preprocess(obs))
+    sample = (mode == 'train') or not self.config.eval_state_mean
+    latent, _ = self.wm.rssm.obs_step(
+        latent, action, embe
