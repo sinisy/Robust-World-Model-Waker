@@ -60,4 +60,20 @@ class Agent(common.Module):
       else:
         actor = self._task_behavior[task].actor(feat)
       action = actor.sample()
-      noise = s
+      noise = self.config.expl_noise
+    action = common.action_noise(action, noise, self.act_space)
+    outputs = {'action': action}
+    state = (latent, action)
+    return outputs, state
+  
+  @tf.function
+  def train(self, data, state=None):
+    metrics = {}
+    state, outputs, mets = self.wm.train(data, state)
+    metrics.update(mets)
+    start = outputs['post']
+    if isinstance(self._task_behavior, dict):
+       for key in self._task_behavior.keys():
+          reward = lambda seq: self.wm.heads['reward_' + key](seq['feat']).mode()
+          mets, _ = self._task_behavior[key].train(
+       
