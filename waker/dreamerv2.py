@@ -76,4 +76,14 @@ class Agent(common.Module):
        for key in self._task_behavior.keys():
           reward = lambda seq: self.wm.heads['reward_' + key](seq['feat']).mode()
           mets, _ = self._task_behavior[key].train(
-       
+              self.wm, start, data['is_terminal'], reward)
+          metrics.update(**{k+'_'+key: v for k, v in mets.items()})
+    else:
+      reward = lambda seq: self.wm.heads['reward'](seq['feat']).mode()
+      task_met, _ = self._task_behavior.train(
+          self.wm, start, data['is_terminal'], reward)
+      metrics.update(task_met)
+    if self.config.expl_behavior != 'greedy':
+      _, mets, seq = self._expl_behavior.train(start, outputs, data)
+      metrics.update({'expl_' + key: value for key, value in mets.items()})
+      return state,
