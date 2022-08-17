@@ -116,4 +116,18 @@ class WorldModel(common.Module):
                                for idx in range(len(common.DOMAIN_TASK_IDS[domain]))})
     else:
       self.heads['reward'] = common.MLP([], **config.reward_head)
-    if config.pred_discount
+    if config.pred_discount:
+      self.heads['discount'] = common.MLP([], **config.discount_head)
+    for name in config.grad_heads:
+      assert name in self.heads, name
+    print(f"World model heads: {list(self.heads.keys())}")
+    self.model_opt = common.Optimizer('model', **config.model_opt)
+
+
+  @tf.function
+  def train(self, data, state=None):
+    with tf.GradientTape() as model_tape:
+      model_loss, state, outputs, metrics = self.loss(data, state)
+    modules = [self.encoder, self.rssm, *self.heads.values()]
+    metrics.update(self.model_opt(model_tape, model_loss, modules))
+    return state, outputs, met
