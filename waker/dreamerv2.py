@@ -130,4 +130,20 @@ class WorldModel(common.Module):
       model_loss, state, outputs, metrics = self.loss(data, state)
     modules = [self.encoder, self.rssm, *self.heads.values()]
     metrics.update(self.model_opt(model_tape, model_loss, modules))
-    return state, outputs, met
+    return state, outputs, metrics
+
+  def loss(self, data, state=None):
+    data = self.preprocess(data)
+    embed = self.encoder(data)
+    post, prior = self.rssm.observe(
+        embed, data['action'], data['is_first'], state)
+    kl_loss, kl_value = self.rssm.kl_loss(post, prior, **self.config.kl)
+    assert len(kl_loss.shape) == 0
+    likes = {}
+    losses = {'kl': kl_loss}
+    feat = self.rssm.get_feat(post)
+    for name, head in self.heads.items():
+      grad_head = (name in self.config.grad_heads)
+      inp = feat if grad_head else tf.stop_gradient(feat)
+      out = head(inp)
+      dists = out if isin
