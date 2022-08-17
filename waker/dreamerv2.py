@@ -107,4 +107,13 @@ class WorldModel(common.Module):
     self.config = config
     self.tfstep = tfstep
     self.domain = domain
-    se
+    self.rssm = common.EnsembleRSSM(**config.rssm)
+    self.encoder = common.Encoder(shapes, **config.encoder)
+    self.heads = {}
+    self.heads['decoder'] = common.Decoder(shapes, **config.decoder)
+    if domain in common.DOMAIN_TASK_IDS:
+      self.heads.update({f'reward_{common.DOMAIN_TASK_IDS[domain][idx]}': common.MLP([], **config.reward_head)
+                               for idx in range(len(common.DOMAIN_TASK_IDS[domain]))})
+    else:
+      self.heads['reward'] = common.MLP([], **config.reward_head)
+    if config.pred_discount
