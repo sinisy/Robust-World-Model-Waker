@@ -86,4 +86,25 @@ class Agent(common.Module):
     if self.config.expl_behavior != 'greedy':
       _, mets, seq = self._expl_behavior.train(start, outputs, data)
       metrics.update({'expl_' + key: value for key, value in mets.items()})
-      return state,
+      return state, (metrics, seq)
+    else:
+      return state, (metrics, None)
+
+  @tf.function
+  def report(self, data):
+    report = {}
+    data = self.wm.preprocess(data)
+    for key in self.wm.heads['decoder'].cnn_keys:
+      name = key.replace('/', '_')
+      report[f'openl_{name}'] = self.wm.video_pred(data, key)
+    return report
+
+
+class WorldModel(common.Module):
+
+  def __init__(self, config, obs_space, tfstep, domain):
+    shapes = {k: tuple(v.shape) for k, v in obs_space.items()}
+    self.config = config
+    self.tfstep = tfstep
+    self.domain = domain
+    se
