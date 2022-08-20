@@ -146,4 +146,15 @@ class WorldModel(common.Module):
       grad_head = (name in self.config.grad_heads)
       inp = feat if grad_head else tf.stop_gradient(feat)
       out = head(inp)
-      dists = out if isin
+      dists = out if isinstance(out, dict) else {name: out}
+      for key, dist in dists.items():
+        if 'reward_' in key:
+            _, rew_key = key.split('_')
+            rew_idx = common.DOMAIN_TASK_IDS[self.domain].index(rew_key)
+            like = tf.cast(dist.log_prob(data['reward'][:, :, rew_idx]), tf.float32)
+        else:
+            like = tf.cast(dist.log_prob(data[key]), tf.float32)
+        likes[key] = like
+        losses[key] = -like.mean()
+    model_loss = sum(
+        self.config.loss_scales.get(k, 1.0) * v for k, v in losses.items())
