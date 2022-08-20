@@ -180,4 +180,16 @@ class WorldModel(common.Module):
       feat = self.rssm.get_feat(state)
       for key, value in {**state, 'action': action, 'feat': feat}.items():
         seq[key].append(value)
-    seq = {k: tf.stac
+    seq = {k: tf.stack(v, 0) for k, v in seq.items()}
+    if 'discount' in self.heads:
+      disc = self.heads['discount'](seq['feat']).mean()
+      if is_terminal is not None:
+        # Override discount prediction for the first step with the true
+        # discount factor from the replay buffer.
+        true_first = 1.0 - flatten(is_terminal).astype(disc.dtype)
+        true_first *= self.config.discount
+        disc = tf.concat([true_first[None], disc[1:]], 0)
+    else:
+      disc = self.config.discount * tf.ones(seq['feat'].shape[:-1])
+    seq['discount'] = disc
+    # Shift discount factors because they i
