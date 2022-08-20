@@ -169,4 +169,15 @@ class WorldModel(common.Module):
     return model_loss, last_state, outs, metrics
 
   def imagine(self, policy, start, is_terminal, horizon):
-    flatten = lambda x: x.reshape([-1] 
+    flatten = lambda x: x.reshape([-1] + list(x.shape[2:]))
+    start = {k: flatten(v) for k, v in start.items()}
+    start['feat'] = self.rssm.get_feat(start)
+    start['action'] = tf.zeros_like(policy(start['feat']).sample())
+    seq = {k: [v] for k, v in start.items()}
+    for _ in range(horizon):
+      action = policy(tf.stop_gradient(seq['feat'][-1])).sample()
+      state = self.rssm.img_step({k: v[-1] for k, v in seq.items()}, action)
+      feat = self.rssm.get_feat(state)
+      for key, value in {**state, 'action': action, 'feat': feat}.items():
+        seq[key].append(value)
+    seq = {k: tf.stac
