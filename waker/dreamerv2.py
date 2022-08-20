@@ -158,3 +158,15 @@ class WorldModel(common.Module):
         losses[key] = -like.mean()
     model_loss = sum(
         self.config.loss_scales.get(k, 1.0) * v for k, v in losses.items())
+    outs = dict(
+        embed=embed, feat=feat, post=post,
+        prior=prior, likes=likes, kl=kl_value)
+    metrics = {f'{name}_loss': value for name, value in losses.items()}
+    metrics['model_kl'] = kl_value.mean()
+    metrics['prior_ent'] = self.rssm.get_dist(prior).entropy().mean()
+    metrics['post_ent'] = self.rssm.get_dist(post).entropy().mean()
+    last_state = {k: v[:, -1] for k, v in post.items()}
+    return model_loss, last_state, outs, metrics
+
+  def imagine(self, policy, start, is_terminal, horizon):
+    flatten = lambda x: x.reshape([-1] 
