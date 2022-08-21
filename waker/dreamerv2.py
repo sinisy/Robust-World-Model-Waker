@@ -192,4 +192,22 @@ class WorldModel(common.Module):
     else:
       disc = self.config.discount * tf.ones(seq['feat'].shape[:-1])
     seq['discount'] = disc
-    # Shift discount factors because they i
+    # Shift discount factors because they imply whether the following state
+    # will be valid, not whether the current state is valid.
+    seq['weight'] = tf.math.cumprod(
+        tf.concat([tf.ones_like(disc[:1]), disc[:-1]], 0), 0)
+    return seq
+
+  @tf.function
+  def preprocess(self, obs):
+    dtype = prec.global_policy().compute_dtype
+    obs = obs.copy()
+    for key, value in obs.items():
+      if key.startswith('log_'):
+        continue
+      if value.dtype == tf.int32:
+        value = value.astype(dtype)
+      if value.dtype == tf.uint8:
+        value = value.astype(dtype) / 255.0 - 0.5
+      obs[key] = value
+    obs['reward'] = {
