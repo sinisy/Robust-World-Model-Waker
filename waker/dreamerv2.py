@@ -211,3 +211,21 @@ class WorldModel(common.Module):
         value = value.astype(dtype) / 255.0 - 0.5
       obs[key] = value
     obs['reward'] = {
+        'identity': tf.identity,
+        'sign': tf.sign,
+        'tanh': tf.tanh,
+    }[self.config.clip_rewards](obs['reward'])
+    obs['discount'] = 1.0 - obs['is_terminal'].astype(dtype)
+    obs['discount'] *= self.config.discount
+    return obs
+
+  @tf.function
+  def video_pred(self, data, key):
+    decoder = self.heads['decoder']
+    truth = data[key][:6] + 0.5
+    embed = self.encoder(data)
+    states, _ = self.rssm.observe(
+        embed[:6, :5], data['action'][:6, :5], data['is_first'][:6, :5])
+    recon = decoder(self.rssm.get_feat(states))[key].mode()[:6]
+    init = {k: v[:, -1] for k, v in states.items()}
+  
