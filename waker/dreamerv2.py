@@ -242,4 +242,16 @@ class WorldModel(common.Module):
     decoder = self.heads['decoder']
     truth = data[key][:6] + 0.5
     embed = self.encoder(data)
-    states, _ = self.rssm.obs
+    states, _ = self.rssm.observe(
+        embed[:6, :5], data['action'][:6, :5], data['is_first'][:6, :5])
+    recon = decoder(self.rssm.get_feat(states))[key].mode()[:6]
+    init = {k: v[:, -1] for k, v in states.items()}
+    prior = self.rssm.imagine(data['action'][:6, 5:], init)
+    openl = decoder(self.rssm.get_feat(prior))[key].mode()
+    model = tf.concat([recon[:, :5] + 0.5, openl + 0.5], 1)
+    error = (model - truth) 
+    error_sq = tf.math.square(error)
+    mae = tf.math.reduce_mean(tf.math.abs(error))
+    mse = tf.math.reduce_mean(error_sq)
+    metrics = {
+      "image_mae": mae,
