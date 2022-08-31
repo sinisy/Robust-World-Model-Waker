@@ -272,4 +272,17 @@ class ActorCritic(common.Module):
     if self.config.actor_grad == 'auto':
       self.config = self.config.update({
           'actor_grad': 'reinforce' if discrete else 'dynamics'})
-    self.actor = common.MLP(act_space.
+    self.actor = common.MLP(act_space.shape[0], **self.config.actor)
+    self.critic = common.MLP([], **self.config.critic)
+    if self.config.slow_target:
+      self._target_critic = common.MLP([], **self.config.critic)
+      self._updates = tf.Variable(0, tf.int64)
+    else:
+      self._target_critic = self.critic
+    self.actor_opt = common.Optimizer('actor', **self.config.actor_opt)
+    self.critic_opt = common.Optimizer('critic', **self.config.critic_opt)
+    self.rewnorm = common.StreamNorm(**self.config.reward_norm)
+
+  @tf.function
+  def train(self, world_model, start, is_terminal, reward_fn):
+    me
