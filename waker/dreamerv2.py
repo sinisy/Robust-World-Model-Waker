@@ -285,4 +285,15 @@ class ActorCritic(common.Module):
 
   @tf.function
   def train(self, world_model, start, is_terminal, reward_fn):
-    me
+    metrics = {}
+    hor = self.config.imag_horizon
+    # The weights are is_terminal flags for the imagination start states.
+    # Technically, they should multiply the losses from the second trajectory
+    # step onwards, which is the first imagined step. However, we are not
+    # training the action that led into the first step anyway, so we can use
+    # them to scale the whole sequence.
+    with tf.GradientTape() as actor_tape:
+      seq = world_model.imagine(self.actor, start, is_terminal, hor)
+      reward = reward_fn(seq)
+      seq['reward'], mets1 = self.rewnorm(reward)
+     
