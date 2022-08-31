@@ -255,3 +255,21 @@ class WorldModel(common.Module):
     mse = tf.math.reduce_mean(error_sq)
     metrics = {
       "image_mae": mae,
+      "image_mse": mse
+    }
+    return metrics
+
+class ActorCritic(common.Module):
+
+  def __init__(self, config, act_space, tfstep):
+    self.config = config
+    self.act_space = act_space
+    self.tfstep = tfstep
+    discrete = hasattr(act_space, 'n')
+    if self.config.actor.dist == 'auto':
+      self.config = self.config.update({
+          'actor.dist': 'onehot' if discrete else 'trunc_normal'})
+    if self.config.actor_grad == 'auto':
+      self.config = self.config.update({
+          'actor_grad': 'reinforce' if discrete else 'dynamics'})
+    self.actor = common.MLP(act_space.
