@@ -296,4 +296,16 @@ class ActorCritic(common.Module):
       seq = world_model.imagine(self.actor, start, is_terminal, hor)
       reward = reward_fn(seq)
       seq['reward'], mets1 = self.rewnorm(reward)
-     
+      mets1 = {f'reward_{k}': v for k, v in mets1.items()}
+      target, mets2 = self.target(seq)
+      actor_loss, mets3 = self.actor_loss(seq, target)
+    with tf.GradientTape() as critic_tape:
+      critic_loss, mets4 = self.critic_loss(seq, target)
+    metrics.update(self.actor_opt(actor_tape, actor_loss, self.actor))
+    metrics.update(self.critic_opt(critic_tape, critic_loss, self.critic))
+    metrics.update(**mets1, **mets2, **mets3, **mets4)
+    self.update_slow_target()  # Variables exist after first forward pass.
+    return metrics, seq
+
+  def actor_loss(self, seq, target):
+    # Actions:      0   [a1]  [a2]   a
