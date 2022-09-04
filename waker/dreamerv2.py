@@ -308,4 +308,17 @@ class ActorCritic(common.Module):
     return metrics, seq
 
   def actor_loss(self, seq, target):
-    # Actions:      0   [a1]  [a2]   a
+    # Actions:      0   [a1]  [a2]   a3
+    #                  ^  |  ^  |  ^  |
+    #                 /   v /   v /   v
+    # States:     [z0]->[z1]-> z2 -> z3
+    # Targets:     t0   [t1]  [t2]
+    # Baselines:  [v0]  [v1]   v2    v3
+    # Entropies:        [e1]  [e2]
+    # Weights:    [ 1]  [w1]   w2    w3
+    # Loss:              l1    l2
+    metrics = {}
+    # Two states are lost at the end of the trajectory, one for the boostrap
+    # value prediction and one because the corresponding action does not lead
+    # anywhere anymore. One target is lost at the start of the trajectory
+    # because the initial state
