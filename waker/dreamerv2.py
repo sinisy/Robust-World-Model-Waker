@@ -321,4 +321,15 @@ class ActorCritic(common.Module):
     # Two states are lost at the end of the trajectory, one for the boostrap
     # value prediction and one because the corresponding action does not lead
     # anywhere anymore. One target is lost at the start of the trajectory
-    # because the initial state
+    # because the initial state comes from the replay buffer.
+    policy = self.actor(tf.stop_gradient(seq['feat'][:-2]))
+    if self.config.actor_grad == 'dynamics':
+      objective = target[1:]
+    elif self.config.actor_grad == 'reinforce':
+      baseline = self._target_critic(seq['feat'][:-2]).mode()
+      advantage = tf.stop_gradient(target[1:] - baseline)
+      action = tf.stop_gradient(seq['action'][1:-1])
+      objective = policy.log_prob(action) * advantage
+    elif self.config.actor_grad == 'both':
+      baseline = self._target_critic(seq['feat'][:-2]).mode()
+      advantage = tf.stop_gradient(target[1:]
