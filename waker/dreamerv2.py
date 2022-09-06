@@ -332,4 +332,17 @@ class ActorCritic(common.Module):
       objective = policy.log_prob(action) * advantage
     elif self.config.actor_grad == 'both':
       baseline = self._target_critic(seq['feat'][:-2]).mode()
-      advantage = tf.stop_gradient(target[1:]
+      advantage = tf.stop_gradient(target[1:] - baseline)
+      objective = policy.log_prob(seq['action'][1:-1]) * advantage
+      mix = common.schedule(self.config.actor_grad_mix, self.tfstep)
+      objective = mix * target[1:] + (1 - mix) * objective
+      metrics['actor_grad_mix'] = mix
+    else:
+      raise NotImplementedError(self.config.actor_grad)
+    ent = policy.entropy()
+    ent_scale = common.schedule(self.config.actor_ent, self.tfstep)
+    objective += ent_scale * ent
+    weight = tf.stop_gradient(seq['weight'])
+    actor_loss = -(weight[:-2] * objective).mean()
+    metrics['actor_ent'] = ent.mean()
+    metrics['actor_ent_scale'] = ent_
