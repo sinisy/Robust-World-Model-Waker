@@ -362,4 +362,18 @@ class ActorCritic(common.Module):
     metrics = {'critic': dist.mode().mean()}
     return critic_loss, metrics
 
-  def target(self, se
+  def target(self, seq):
+    # States:     [z0]  [z1]  [z2]  [z3]
+    # Rewards:    [r0]  [r1]  [r2]   r3
+    # Values:     [v0]  [v1]  [v2]  [v3]
+    # Discount:   [d0]  [d1]  [d2]   d3
+    # Targets:     t0    t1    t2
+    reward = tf.cast(seq['reward'], tf.float32)
+    disc = tf.cast(seq['discount'], tf.float32)
+    value = self._target_critic(seq['feat']).mode()
+    # Skipping last time step because it is used for bootstrapping.
+    target = common.lambda_return(
+        reward[:-1], value[:-1], disc[:-1],
+        bootstrap=value[-1],
+        lambda_=self.config.discount_lambda,
+        a
