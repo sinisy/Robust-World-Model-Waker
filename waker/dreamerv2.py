@@ -376,4 +376,17 @@ class ActorCritic(common.Module):
         reward[:-1], value[:-1], disc[:-1],
         bootstrap=value[-1],
         lambda_=self.config.discount_lambda,
-        a
+        axis=0)
+    metrics = {}
+    metrics['critic_slow'] = value.mean()
+    metrics['critic_target'] = target.mean()
+    return target, metrics
+
+  def update_slow_target(self):
+    if self.config.slow_target:
+      if self._updates % self.config.slow_target_update == 0:
+        mix = 1.0 if self._updates == 0 else float(
+            self.config.slow_target_fraction)
+        for s, d in zip(self.critic.variables, self._target_critic.variables):
+          d.assign(mix * s + (1 - mix) * d)
+      self._updates.assign_add(1)
