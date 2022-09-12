@@ -28,4 +28,21 @@ physics = mujoco.Physics.from_xml_string(xml_string)
 pixels = physics.render()
 
 # Reset the simulation, move the slide joint upwards and recompute derived
-# quantiti
+# quantities (e.g. the positions of the body and geoms).
+with physics.reset_context():
+  physics.named.data.qpos['up_down'] = 0.5
+
+# Print the positions of the geoms.
+print(physics.named.data.geom_xpos)
+# FieldIndexer(geom_xpos):
+#            x         y         z
+# 0  floor [ 0         0         0       ]
+# 1    box [ 0         0         0.8     ]
+# 2 sphere [ 0.2       0.2       1       ]
+
+# Advance the simulation for 1 second.
+while physics.time() < 1.:
+  physics.step()
+
+# Print the new z-positions of the 'box' and 'sphere' geoms.
+print(physics.named.data.geom_xpos[['box', 'sphere'], '
