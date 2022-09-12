@@ -45,4 +45,6 @@ while physics.time() < 1.:
   physics.step()
 
 # Print the new z-positions of the 'box' and 'sphere' geoms.
-print(physics.named.data.geom_xpos[['box', 'sphere'], '
+print(physics.named.data.geom_xpos[['box', 'sphere'], 'z'])
+# [ 0.19996362  0.39996362]
+```
