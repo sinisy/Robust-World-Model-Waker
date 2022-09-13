@@ -10,4 +10,16 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or  implied.
 # See the License for the specific language governing permissions and
-# limitations under the Licen
+# limitations under the License.
+# ============================================================================
+
+"""Mujoco implementations of base classes."""
+
+from dm_control.mujoco.engine import action_spec
+
+from dm_control.mujoco.engine import Camera
+from dm_control.mujoco.engine import MovableCamera
+from dm_control.mujoco.engine import Physics
+from dm_control.mujoco.engine import TextOverlay
+
+from mujoco import *
