@@ -15,4 +15,15 @@
 
 """Mujoco `Physics` implementation and helper classes.
 
-The `Physics` class provides the 
+The `Physics` class provides the main Python interface to MuJoCo.
+
+MuJoCo models are defined using the MJCF XML format. The `Physics` class
+can load a model from a path to an XML file, an XML string, or from a serialized
+MJB binary format. See the named constructors for each of these cases.
+
+Each `Physics` instance defines a simulated world. To step forward the
+simulation, use the `step` method. To set a control or actuation signal, use the
+`set_control` method, which will apply the provided signal to the actuators in
+subsequent calls to `step`.
+
+Use the `Camera` class to create RGB 
