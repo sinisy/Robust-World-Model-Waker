@@ -26,4 +26,19 @@ simulation, use the `step` method. To set a control or actuation signal, use the
 `set_control` method, which will apply the provided signal to the actuators in
 subsequent calls to `step`.
 
-Use the `Camera` class to create RGB 
+Use the `Camera` class to create RGB or depth images. A `Camera` can render its
+viewport to an array using the `render` method, and can query for objects
+visible at specific positions using the `select` method. The `Physics` class
+also provides a `render` method that returns a pixel array directly.
+"""
+import collections
+import contextlib
+import threading
+from typing import Callable, NamedTuple, Optional, Union
+
+from absl import logging
+
+from dm_control import _render
+from dm_control.mujoco import index
+from dm_control.mujoco import wrapper
+from dm_control.mujoco.wrapper import uti
