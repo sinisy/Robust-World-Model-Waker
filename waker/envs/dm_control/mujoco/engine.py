@@ -61,4 +61,16 @@ _GRID_POSITIONS = {
 
 Contexts = collections.namedtuple('Contexts', ['gl', 'mujoco'])
 Selected = collections.namedtuple(
-    'Select
+    'Selected', ['body', 'geom', 'skin', 'world_position'])
+NamedIndexStructs = collections.namedtuple(
+    'NamedIndexStructs', ['model', 'data'])
+Pose = collections.namedtuple(
+    'Pose', ['lookat', 'distance', 'azimuth', 'elevation'])
+
+_BOTH_SEGMENTATION_AND_DEPTH_ENABLED = (
+    '`segmentation` and `depth` cannot both be `True`.')
+_INVALID_PHYSICS_STATE = (
+    'Physics state is invalid. Warning(s) raised: {warning_names}')
+_OVERLAYS_NOT_SUPPORTED_FOR_DEPTH_OR_SEGMENTATION = (
+    'Overlays are not supported with depth or segmentation rendering.')
+_RENDER_FLAG_OVER
