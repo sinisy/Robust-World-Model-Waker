@@ -41,4 +41,24 @@ from absl import logging
 from dm_control import _render
 from dm_control.mujoco import index
 from dm_control.mujoco import wrapper
-from dm_control.mujoco.wrapper import uti
+from dm_control.mujoco.wrapper import util
+from dm_control.rl import control as _control
+from dm_env import specs
+import mujoco
+import numpy as np
+
+_FONT_STYLES = {
+    'normal': mujoco.mjtFont.mjFONT_NORMAL,
+    'shadow': mujoco.mjtFont.mjFONT_SHADOW,
+    'big': mujoco.mjtFont.mjFONT_BIG,
+}
+_GRID_POSITIONS = {
+    'top left': mujoco.mjtGridPos.mjGRID_TOPLEFT,
+    'top right': mujoco.mjtGridPos.mjGRID_TOPRIGHT,
+    'bottom left': mujoco.mjtGridPos.mjGRID_BOTTOMLEFT,
+    'bottom right': mujoco.mjtGridPos.mjGRID_BOTTOMRIGHT,
+}
+
+Contexts = collections.namedtuple('Contexts', ['gl', 'mujoco'])
+Selected = collections.namedtuple(
+    'Select
