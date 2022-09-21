@@ -73,4 +73,22 @@ _INVALID_PHYSICS_STATE = (
     'Physics state is invalid. Warning(s) raised: {warning_names}')
 _OVERLAYS_NOT_SUPPORTED_FOR_DEPTH_OR_SEGMENTATION = (
     'Overlays are not supported with depth or segmentation rendering.')
-_RENDER_FLAG_OVER
+_RENDER_FLAG_OVERRIDES_NOT_SUPPORTED_FOR_DEPTH_OR_SEGMENTATION = (
+    '`render_flag_overrides` are not supported for depth or segmentation '
+    'rendering.')
+_KEYFRAME_ID_OUT_OF_RANGE = (
+    '`keyframe_id` must be between 0 and {max_valid} inclusive, got: {actual}.')
+
+
+class Physics(_control.Physics):
+  """Encapsulates a MuJoCo model.
+
+  A MuJoCo model is typically defined by an MJCF XML file [0]
+
+  ```python
+  physics = Physics.from_xml_path('/path/to/model.xml')
+
+  with physics.reset_context():
+    physics.named.data.qpos['hinge'] = np.random.rand()
+
+  # Apply controls and advance the simulation state.
