@@ -92,3 +92,20 @@ class Physics(_control.Physics):
     physics.named.data.qpos['hinge'] = np.random.rand()
 
   # Apply controls and advance the simulation state.
+  physics.set_control(np.random.random_sample(size=N_ACTUATORS))
+  physics.step()
+
+  # Render a camera defined in the XML file to a NumPy array.
+  rgb = physics.render(height=240, width=320, id=0)
+  ```
+
+  [0] http://www.mujoco.org/book/modeling.html
+  """
+
+  _contexts = None
+
+  def __new__(cls, *args, **kwargs):
+    # TODO(b/174603485): Re-enable once lint stops spuriously firing here.
+    obj = super(Physics, cls).__new__(cls)  # pylint: disable=no-value-for-parameter
+    # The lock is created in `__new__` rather than `__init__` because there are
+    # a number of existing subclasses that override
