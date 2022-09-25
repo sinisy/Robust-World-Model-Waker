@@ -108,4 +108,22 @@ class Physics(_control.Physics):
     # TODO(b/174603485): Re-enable once lint stops spuriously firing here.
     obj = super(Physics, cls).__new__(cls)  # pylint: disable=no-value-for-parameter
     # The lock is created in `__new__` rather than `__init__` because there are
-    # a number of existing subclasses that override
+    # a number of existing subclasses that override `__init__` without calling
+    # the `__init__` method of the  superclass.
+    obj._contexts_lock = threading.Lock()  # pylint: disable=protected-access
+    return obj
+
+  def __init__(self, data):
+    """Initializes a new `Physics` instance.
+
+    Args:
+      data: Instance of `wrapper.MjData`.
+    """
+    self._warnings_cause_exception = True
+    self._reload_from_data(data)
+
+  @contextlib.contextmanager
+  def suppress_physics_errors(self):
+    """Physics warnings will be logged rather than raise exceptions."""
+    prev_state = self._warnings_cause_exception
+ 
