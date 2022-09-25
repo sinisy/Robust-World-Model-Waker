@@ -126,4 +126,23 @@ class Physics(_control.Physics):
   def suppress_physics_errors(self):
     """Physics warnings will be logged rather than raise exceptions."""
     prev_state = self._warnings_cause_exception
- 
+    self._warnings_cause_exception = False
+    try:
+      yield
+    finally:
+      self._warnings_cause_exception = prev_state
+
+  def enable_profiling(self):
+    """Enables Mujoco timing profiling."""
+    wrapper.enable_timer(True)
+
+  def set_control(self, control):
+    """Sets the control signal for the actuators.
+
+    Args:
+      control: NumPy array or array-like actuation values.
+    """
+    np.copyto(self.data.ctrl, control)
+
+  def step(self, nstep=1):
+    """Advances physics with up-to-date position and velocity dependent fields.
