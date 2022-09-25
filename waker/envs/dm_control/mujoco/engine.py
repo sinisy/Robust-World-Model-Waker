@@ -146,3 +146,15 @@ class Physics(_control.Physics):
 
   def step(self, nstep=1):
     """Advances physics with up-to-date position and velocity dependent fields.
+
+    Args:
+      nstep: Optional integer, number of steps to take.
+
+    The actuation can be updated by calling the `set_control` function first.
+    """
+    # In the case of Euler integration we assume mj_step1 has already been
+    # called for this state, finish the step with mj_step2 and then update all
+    # position and velocity related fields with mj_step1. This ensures that
+    # (most of) mjData is in sync with qpos and qvel. In the case of non-Euler
+    # integrators (e.g. RK4) an additional mj_step1 must be called after the
+    # last mj_step to ensure mjData syn
