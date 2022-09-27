@@ -157,4 +157,25 @@ class Physics(_control.Physics):
     # position and velocity related fields with mj_step1. This ensures that
     # (most of) mjData is in sync with qpos and qvel. In the case of non-Euler
     # integrators (e.g. RK4) an additional mj_step1 must be called after the
-    # last mj_step to ensure mjData syn
+    # last mj_step to ensure mjData syncing.
+    with self.check_invalid_state():
+      if self.model.opt.integrator != mujoco.mjtIntegrator.mjINT_RK4.value:
+        mujoco.mj_step2(self.model.ptr, self.data.ptr)
+        if nstep > 1:
+          mujoco.mj_step(self.model.ptr, self.data.ptr, nstep-1)
+      else:
+        mujoco.mj_step(self.model.ptr, self.data.ptr, nstep)
+
+      mujoco.mj_step1(self.model.ptr, self.data.ptr)
+
+  def render(
+      self,
+      height=240,
+      width=320,
+      camera_id=-1,
+      overlays=(),
+      depth=False,
+      segmentation=False,
+      scene_option=None,
+      render_flag_overrides=None,
+      scene_callback: Opti
