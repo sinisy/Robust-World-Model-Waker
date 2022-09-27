@@ -178,4 +178,15 @@ class Physics(_control.Physics):
       segmentation=False,
       scene_option=None,
       render_flag_overrides=None,
-      scene_callback: Opti
+      scene_callback: Optional[Callable[['Physics', mujoco.MjvScene],
+                                        None]] = None,
+  ):
+    """Returns a camera view as a NumPy array of pixel values.
+
+    Args:
+      height: Viewport height (number of pixels). Optional, defaults to 240.
+      width: Viewport width (number of pixels). Optional, defaults to 320.
+      camera_id: Optional camera name or index. Defaults to -1, the free
+        camera, which is always defined. A nonnegative integer or string
+        corresponds to a fixed camera, which must be defined in the model XML.
+        If `came
