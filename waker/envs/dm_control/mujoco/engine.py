@@ -189,4 +189,13 @@ class Physics(_control.Physics):
       camera_id: Optional camera name or index. Defaults to -1, the free
         camera, which is always defined. A nonnegative integer or string
         corresponds to a fixed camera, which must be defined in the model XML.
-        If `came
+        If `camera_id` is a string then the camera must also be named.
+      overlays: An optional sequence of `TextOverlay` instances to draw. Only
+        supported if `depth` is False.
+      depth: If `True`, this method returns a NumPy float array of depth values
+        (in meters). Defaults to `False`, which results in an RGB image.
+      segmentation: If `True`, this method returns a 2-channel NumPy int32 array
+        of label values where the pixels of each object are labeled with the
+        pair (mjModel ID, mjtObj enum object type). Background pixels are
+        labeled (-1, -1). Defaults to `False`, which returns an RGB image.
+      scene
