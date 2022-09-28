@@ -222,4 +222,26 @@ class Physics(_control.Physics):
     image = camera.render(
         overlays=overlays, depth=depth, segmentation=segmentation,
         scene_option=scene_option, render_flag_overrides=render_flag_overrides)
-    camera._scene.free()  # pylint
+    camera._scene.free()  # pylint: disable=protected-access
+    return image
+
+  def get_state(self):
+    """Returns the physics state.
+
+    Returns:
+      NumPy array containing full physics simulation state.
+    """
+    return np.concatenate(self._physics_state_items())
+
+  def set_state(self, physics_state):
+    """Sets the physics state.
+
+    Args:
+      physics_state: NumPy array containing the full physics simulation state.
+
+    Raises:
+      ValueError: If `physics_state` has invalid size.
+    """
+    state_items = self._physics_state_items()
+
+    expected_shape = (sum(item.size for item in s
