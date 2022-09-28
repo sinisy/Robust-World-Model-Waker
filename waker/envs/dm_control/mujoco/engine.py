@@ -198,4 +198,12 @@ class Physics(_control.Physics):
         of label values where the pixels of each object are labeled with the
         pair (mjModel ID, mjtObj enum object type). Background pixels are
         labeled (-1, -1). Defaults to `False`, which returns an RGB image.
-      scene
+      scene_option: An optional `wrapper.MjvOption` instance that can be used to
+        render the scene with custom visualization options. If None then the
+        default options will be used.
+      render_flag_overrides: Optional mapping specifying rendering flags to
+        override. The keys can be either lowercase strings or `mjtRndFlag` enum
+        values, and the values are the overridden flag values, e.g.
+        `{'wireframe': True}` or `{mujoco.mjtRndFlag.mjRND_WIREFRAME: True}`.
+        See `mujoco.mjtRndFlag` for the set of valid flags. Must be None if
+        either `d
