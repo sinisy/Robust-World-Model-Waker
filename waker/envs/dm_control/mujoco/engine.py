@@ -206,4 +206,20 @@ class Physics(_control.Physics):
         values, and the values are the overridden flag values, e.g.
         `{'wireframe': True}` or `{mujoco.mjtRndFlag.mjRND_WIREFRAME: True}`.
         See `mujoco.mjtRndFlag` for the set of valid flags. Must be None if
-        either `d
+        either `depth` or `segmentation` is True.
+      scene_callback: Called after the scene has been created and before
+        it is rendered. Can be used to add more geoms to the scene.
+
+    Returns:
+      The rendered RGB, depth or segmentation image.
+    """
+    camera = Camera(
+        physics=self,
+        height=height,
+        width=width,
+        camera_id=camera_id,
+        scene_callback=scene_callback)
+    image = camera.render(
+        overlays=overlays, depth=depth, segmentation=segmentation,
+        scene_option=scene_option, render_flag_overrides=render_flag_overrides)
+    camera._scene.free()  # pylint
