@@ -244,4 +244,20 @@ class Physics(_control.Physics):
     """
     state_items = self._physics_state_items()
 
-    expected_shape = (sum(item.size for item in s
+    expected_shape = (sum(item.size for item in state_items),)
+    if expected_shape != physics_state.shape:
+      raise ValueError('Input physics state has shape {}. Expected {}.'.format(
+          physics_state.shape, expected_shape))
+
+    start = 0
+    for state_item in state_items:
+      size = state_item.size
+      np.copyto(state_item, physics_state[start:start + size])
+      start += size
+
+  def copy(self, share_model=False):
+    """Creates a copy of this `Physics` instance.
+
+    Args:
+      share_model: If True, the copy and the original will share a common
+        MjModel instance. By default, both model and data will both be copi
