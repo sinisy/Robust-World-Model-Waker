@@ -291,4 +291,18 @@ class Physics(_control.Physics):
       if not 0 <= keyframe_id < self.model.nkey:
         raise ValueError(_KEYFRAME_ID_OUT_OF_RANGE.format(
             max_valid=self.model.nkey-1, actual=keyframe_id))
-      mujoco.mj_resetDataKeyframe(self.model.ptr, self.data.ptr, keyframe_i
+      mujoco.mj_resetDataKeyframe(self.model.ptr, self.data.ptr, keyframe_id)
+
+    # Disable actuation since we don't yet have meaningful control inputs.
+    with self.model.disable('actuation'):
+      self.forward()
+
+  def after_reset(self):
+    """Runs after resetting internal variables of the physics simulation."""
+    # Disable actuation since we don't yet have meaningful control inputs.
+    with self.model.disable('actuation'):
+      self.forward()
+
+  def forward(self):
+    """Recomputes the forward dynamics without advancing the simulation."""
+    # Note: `mj_forward` differs from `mj_step1` in that it a
