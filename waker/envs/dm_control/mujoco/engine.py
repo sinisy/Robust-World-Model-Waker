@@ -260,4 +260,22 @@ class Physics(_control.Physics):
 
     Args:
       share_model: If True, the copy and the original will share a common
-        MjModel instance. By default, both model and data will both be copi
+        MjModel instance. By default, both model and data will both be copied.
+
+    Returns:
+      A `Physics` instance.
+    """
+    new_data = self.data._make_copy(share_model=share_model)  # pylint: disable=protected-access
+    cls = self.__class__
+    new_obj = cls.__new__(cls)
+    # pylint: disable=protected-access
+    new_obj._warnings_cause_exception = True
+    new_obj._reload_from_data(new_data)
+    # pylint: enable=protected-access
+    return new_obj
+
+  def reset(self, keyframe_id=None):
+    """Resets internal variables of the simulation, possibly to a keyframe.
+
+    Args:
+      keyframe_id: Optional integer specifying the index o
