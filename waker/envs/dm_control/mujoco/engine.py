@@ -305,4 +305,20 @@ class Physics(_control.Physics):
 
   def forward(self):
     """Recomputes the forward dynamics without advancing the simulation."""
-    # Note: `mj_forward` differs from `mj_step1` in that it a
+    # Note: `mj_forward` differs from `mj_step1` in that it also recomputes
+    # quantities that depend on acceleration (and therefore on the state of the
+    # controls). For example `mj_forward` updates accelerometer and gyro
+    # readings, whereas `mj_step1` does not.
+    # http://www.mujoco.org/book/programming.html#siForward
+    with self.check_invalid_state():
+      mujoco.mj_forward(self.model.ptr, self.data.ptr)
+
+  @contextlib.contextmanager
+  def check_invalid_state(self):
+    """Checks whether the physics state is invalid at exit.
+
+    Yields:
+      None
+
+    Raises:
+      PhysicsError: if the simulation state is in
