@@ -321,4 +321,16 @@ class Physics(_control.Physics):
       None
 
     Raises:
-      PhysicsError: if the simulation state is in
+      PhysicsError: if the simulation state is invalid at exit, unless this
+        context is nested inside a `suppress_physics_errors` context, in which
+        case a warning will be logged instead.
+    """
+    np.copyto(self._warnings_before, self._warnings)
+    yield
+    np.greater(self._warnings, self._warnings_before, out=self._new_warnings)
+    if any(self._new_warnings):
+      warning_names = np.compress(self._new_warnings,
+                                  list(mujoco.mjtWarning.__members__))
+      message = _INVALID_PHYSICS_STATE.format(
+          warning_names=', '.join(warning_names))
+      if self._warni
