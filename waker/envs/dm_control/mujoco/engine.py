@@ -349,4 +349,22 @@ class Physics(_control.Physics):
     self._reload_from_data(data)
 
   def _reload_from_model(self, model):
-    """Initializes a new or existing `Physics` from a `wrapper.Mj
+    """Initializes a new or existing `Physics` from a `wrapper.MjModel`.
+
+    Creates a new `wrapper.MjData` instance, then delegates to
+    `_reload_from_data`.
+
+    Args:
+      model: Instance of `wrapper.MjModel`.
+    """
+    data = wrapper.MjData(model)
+    self._reload_from_data(data)
+
+  def _reload_from_data(self, data):
+    """Initializes a new or existing `Physics` instance from a `wrapper.MjData`.
+
+    Assigns all attributes, sets up named indexing, and creates rendering
+    contexts if rendering is enabled.
+
+    The default constructor as well as the other `reload_from` methods should
+    delegate to this
