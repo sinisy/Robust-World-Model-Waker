@@ -383,4 +383,19 @@ class Physics(_control.Physics):
     self._new_warnings = np.empty(dtype=bool, shape=(len(self._warnings),))
 
     # Forcibly free any previous GL context in order to avoid problems with GL
-    #
+    # implementations that do not support multiple contexts on a given device.
+    with self._contexts_lock:
+      if self._contexts:
+        self._free_rendering_contexts()
+
+    # Call kinematics update to enable rendering.
+    try:
+      self.after_reset()
+    except _control.PhysicsError as e:
+      logging.warning(e)
+
+    # Set up named indexing.
+    axis_indexers = index.make_axis_indexers(self.model)
+    self._named = NamedIndexStructs(
+        model=index.struct_indexer(self.model, 'mjmodel', axis_indexers),
+        
