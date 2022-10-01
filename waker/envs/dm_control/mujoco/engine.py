@@ -367,4 +367,20 @@ class Physics(_control.Physics):
     contexts if rendering is enabled.
 
     The default constructor as well as the other `reload_from` methods should
-    delegate to this
+    delegate to this method.
+
+    Args:
+      data: Instance of `wrapper.MjData`.
+    """
+    if not isinstance(data, wrapper.MjData):
+      raise TypeError(f'Expected wrapper.MjData. Got: {type(data)}.')
+    self._data = data
+
+    # Performance optimization: pre-allocate numpy arrays used when checking for
+    # MuJoCo warnings on each step.
+    self._warnings = self.data.warning.number
+    self._warnings_before = np.empty_like(self._warnings)
+    self._new_warnings = np.empty(dtype=bool, shape=(len(self._warnings),))
+
+    # Forcibly free any previous GL context in order to avoid problems with GL
+    #
