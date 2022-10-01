@@ -333,4 +333,20 @@ class Physics(_control.Physics):
                                   list(mujoco.mjtWarning.__members__))
       message = _INVALID_PHYSICS_STATE.format(
           warning_names=', '.join(warning_names))
-      if self._warni
+      if self._warnings_cause_exception:
+        raise _control.PhysicsError(message)
+      else:
+        logging.warn(message)
+
+  def __getstate__(self):
+    return self.data  # All state is assumed to reside within `self.data`.
+
+  def __setstate__(self, data):
+    # Note: `_contexts_lock` is normally created in `__new__`, but `__new__` is
+    #       not invoked during unpickling.
+    self._contexts_lock = threading.Lock()
+    self._warnings_cause_exception = True
+    self._reload_from_data(data)
+
+  def _reload_from_model(self, model):
+    """Initializes a new or existing `Physics` from a `wrapper.Mj
