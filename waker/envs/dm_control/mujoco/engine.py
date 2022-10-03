@@ -398,4 +398,21 @@ class Physics(_control.Physics):
     axis_indexers = index.make_axis_indexers(self.model)
     self._named = NamedIndexStructs(
         model=index.struct_indexer(self.model, 'mjmodel', axis_indexers),
-        
+        data=index.struct_indexer(self.data, 'mjdata', axis_indexers),)
+
+  def free(self):
+    """Frees the native MuJoCo data structures held by this `Physics` instance.
+
+    This is an advanced feature for use when manual memory management is
+    necessary. This `Physics` object MUST NOT be used after this function has
+    been called.
+    """
+    with self._contexts_lock:
+      if self._contexts:
+        self._free_rendering_contexts()
+    del self._data
+
+  @classmethod
+  def from_model(cls, model):
+    """A named constructor from a `wrapper.MjModel` instance."""
+    data = wrapper.MjData(model)
