@@ -416,3 +416,20 @@ class Physics(_control.Physics):
   def from_model(cls, model):
     """A named constructor from a `wrapper.MjModel` instance."""
     data = wrapper.MjData(model)
+    return cls(data)
+
+  @classmethod
+  def from_xml_string(cls, xml_string, assets=None):
+    """A named constructor from a string containing an MJCF XML file.
+
+    Args:
+      xml_string: XML string containing an MJCF model description.
+      assets: Optional dict containing external assets referenced by the model
+        (such as additional XML files, textures, meshes etc.), in the form of
+        `{filename: contents_string}` pairs. The keys should correspond to the
+        filenames specified in the model XML.
+
+    Returns:
+      A new `Physics` instance.
+    """
+    model = wrapper.MjModel.fr
