@@ -432,4 +432,23 @@ class Physics(_control.Physics):
     Returns:
       A new `Physics` instance.
     """
-    model = wrapper.MjModel.fr
+    model = wrapper.MjModel.from_xml_string(xml_string, assets=assets)
+    return cls.from_model(model)
+
+  @classmethod
+  def from_byte_string(cls, byte_string):
+    """A named constructor from a model binary as a byte string."""
+    model = wrapper.MjModel.from_byte_string(byte_string)
+    return cls.from_model(model)
+
+  @classmethod
+  def from_xml_path(cls, file_path):
+    """A named constructor from a path to an MJCF XML file.
+
+    Args:
+      file_path: String containing path to model definition file.
+
+    Returns:
+      A new `Physics` instance.
+    """
+    model = wrapper.MjModel.from_xml_path(fi
