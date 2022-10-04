@@ -471,4 +471,18 @@ class Physics(_control.Physics):
     """Reloads the `Physics` instance from a string containing an MJCF XML file.
 
     After calling this method, the state of the `Physics` instance is the same
+    as a new `Physics` instance created with the `from_xml_string` named
+    constructor.
+
+    Args:
+      xml_string: XML string containing an MJCF model description.
+      assets: Optional dict containing external assets referenced by the model
+        (such as additional XML files, textures, meshes etc.), in the form of
+        `{filename: contents_string}` pairs. The keys should correspond to the
+        filenames specified in the model XML.
+    """
+    new_model = wrapper.MjModel.from_xml_string(xml_string, assets=assets)
+    self._reload_from_model(new_model)
+
+  def reload_from_xml_path(self, file_path):
   
