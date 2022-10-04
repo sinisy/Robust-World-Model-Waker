@@ -451,4 +451,24 @@ class Physics(_control.Physics):
     Returns:
       A new `Physics` instance.
     """
-    model = wrapper.MjModel.from_xml_path(fi
+    model = wrapper.MjModel.from_xml_path(file_path)
+    return cls.from_model(model)
+
+  @classmethod
+  def from_binary_path(cls, file_path):
+    """A named constructor from a path to an MJB model binary file.
+
+    Args:
+      file_path: String containing path to model definition file.
+
+    Returns:
+      A new `Physics` instance.
+    """
+    model = wrapper.MjModel.from_binary_path(file_path)
+    return cls.from_model(model)
+
+  def reload_from_xml_string(self, xml_string, assets=None):
+    """Reloads the `Physics` instance from a string containing an MJCF XML file.
+
+    After calling this method, the state of the `Physics` instance is the same
+  
