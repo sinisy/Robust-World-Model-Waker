@@ -502,4 +502,18 @@ class Physics(_control.Physics):
 
   def _make_rendering_contexts(self):
     """Creates the OpenGL and MuJoCo rendering contexts."""
-    # Get the offscreen framebuffer size, as specified i
+    # Get the offscreen framebuffer size, as specified in the model XML.
+    max_width = self.model.vis.global_.offwidth
+    max_height = self.model.vis.global_.offheight
+    # Create the OpenGL context.
+    render_context = _render.Renderer(
+        max_width=max_width, max_height=max_height)
+    # Create the MuJoCo context.
+    mujoco_context = wrapper.MjrContext(self.model, render_context)
+    self._contexts = Contexts(gl=render_context, mujoco=mujoco_context)
+
+  def _free_rendering_contexts(self):
+    """Frees existing OpenGL and MuJoCo rendering contexts."""
+    self._contexts.mujoco.free()
+    self._contexts.gl.free()
+    self._contexts =
