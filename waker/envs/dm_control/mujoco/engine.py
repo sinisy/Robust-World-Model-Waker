@@ -485,4 +485,21 @@ class Physics(_control.Physics):
     self._reload_from_model(new_model)
 
   def reload_from_xml_path(self, file_path):
-  
+    """Reloads the `Physics` instance from a path to an MJCF XML file.
+
+    After calling this method, the state of the `Physics` instance is the same
+    as a new `Physics` instance created with the `from_xml_path`
+    named constructor.
+
+    Args:
+      file_path: String containing path to model definition file.
+    """
+    self._reload_from_model(wrapper.MjModel.from_xml_path(file_path))
+
+  @property
+  def named(self):
+    return self._named
+
+  def _make_rendering_contexts(self):
+    """Creates the OpenGL and MuJoCo rendering contexts."""
+    # Get the offscreen framebuffer size, as specified i
