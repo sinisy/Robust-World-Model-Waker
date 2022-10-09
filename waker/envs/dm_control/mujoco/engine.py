@@ -560,4 +560,25 @@ class Physics(_control.Physics):
     """Returns a copy of the control signals for the actuators."""
     return self.data.ctrl.copy()
 
-  def activation(s
+  def activation(self):
+    """Returns a copy of the internal states of actuators.
+
+    For details, please refer to
+    http://www.mujoco.org/book/computation.html#geActuation
+
+    Returns:
+      Activations in a numpy array.
+    """
+    return self.data.act.copy()
+
+  def state(self):
+    """Returns the full physics state. Alias for `get_physics_state`."""
+    return np.concatenate(self._physics_state_items())
+
+  def position(self):
+    """Returns a copy of the generalized positions (system configuration)."""
+    return self.data.qpos.copy()
+
+  def velocity(self):
+    """Returns a copy of the generalized velocities."""
+    
