@@ -581,4 +581,26 @@ class Physics(_control.Physics):
 
   def velocity(self):
     """Returns a copy of the generalized velocities."""
-    
+    return self.data.qvel.copy()
+
+  def timestep(self):
+    """Returns the simulation timestep."""
+    return self.model.opt.timestep
+
+  def time(self):
+    """Returns episode time in seconds."""
+    return self.data.time
+
+
+class CameraMatrices(NamedTuple):
+  """Component matrices used to construct the camera matrix.
+
+  The matrix product over these components yields the camera matrix.
+
+  Attributes:
+    image: (3, 3) image matrix.
+    focal: (3, 4) focal matrix.
+    rotation: (4, 4) rotation matrix.
+    translation: (4, 4) translation matrix.
+  """
+  imag
