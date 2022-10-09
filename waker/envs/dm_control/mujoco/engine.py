@@ -516,4 +516,26 @@ class Physics(_control.Physics):
     """Frees existing OpenGL and MuJoCo rendering contexts."""
     self._contexts.mujoco.free()
     self._contexts.gl.free()
-    self._contexts =
+    self._contexts = None
+
+  @property
+  def contexts(self):
+    """Returns a `Contexts` namedtuple, used in `Camera`s and rendering code."""
+    with self._contexts_lock:
+      if not self._contexts:
+        self._make_rendering_contexts()
+    return self._contexts
+
+  @property
+  def model(self):
+    return self._data.model
+
+  @property
+  def data(self):
+    return self._data
+
+  def _physics_state_items(self):
+    """Returns list of arrays making up internal physics simulation state.
+
+    The physics state consists of the state variables, their derivatives and
+    act
