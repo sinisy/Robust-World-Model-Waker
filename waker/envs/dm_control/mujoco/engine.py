@@ -623,4 +623,18 @@ class Camera:
       physics: Physics,
       height: int = 240,
       width: int = 320,
-      camera_id: Union[int, str] 
+      camera_id: Union[int, str] = -1,
+      max_geom: Optional[int] = None,
+      scene_callback: Optional[Callable[[Physics, mujoco.MjvScene],
+                                        None]] = None,
+  ):
+    """Initializes a new `Camera`.
+
+    Args:
+      physics: Instance of `Physics`.
+      height: Optional image height. Defaults to 240.
+      width: Optional image width. Defaults to 320.
+      camera_id: Optional camera name or index. Defaults to -1, the free
+        camera, which is always defined. A nonnegative integer or string
+        corresponds to a fixed camera, which must be defined in the model XML.
+        If `camera_id` i
