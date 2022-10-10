@@ -603,4 +603,24 @@ class CameraMatrices(NamedTuple):
     rotation: (4, 4) rotation matrix.
     translation: (4, 4) translation matrix.
   """
-  imag
+  image: np.ndarray
+  focal: np.ndarray
+  rotation: np.ndarray
+  translation: np.ndarray
+
+
+class Camera:
+  """Mujoco scene camera.
+
+  Holds rendering properties such as the width and height of the viewport. The
+  camera position and rotation is defined by the Mujoco camera corresponding to
+  the `camera_id`. Multiple `Camera` instances may exist for a single
+  `camera_id`, for example to render the same view at different resolutions.
+  """
+
+  def __init__(
+      self,
+      physics: Physics,
+      height: int = 240,
+      width: int = 320,
+      camera_id: Union[int, str] 
