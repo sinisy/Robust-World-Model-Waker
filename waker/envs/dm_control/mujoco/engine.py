@@ -656,4 +656,15 @@ class Camera:
                        '<visual>\n'
                        '  <global offwidth="my_width"/>\n'
                        '</visual>'.format(width, buffer_width))
-    if height > buf
+    if height > buffer_height:
+      raise ValueError('Image height {} > framebuffer height {}. Either reduce '
+                       'the image height or specify a larger offscreen '
+                       'framebuffer in the model XML using the clause\n'
+                       '<visual>\n'
+                       '  <global offheight="my_height"/>\n'
+                       '</visual>'.format(height, buffer_height))
+    if isinstance(camera_id, str):
+      camera_id = physics.model.name2id(camera_id, 'camera')
+    if camera_id < -1:
+      raise ValueError('camera_id cannot be smaller than -1.')
+    if c
