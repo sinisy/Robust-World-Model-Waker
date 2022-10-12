@@ -645,4 +645,15 @@ class Camera:
         it is rendered. Can be used to add more geoms to the scene.
     Raises:
       ValueError: If `camera_id` is outside the valid range, or if `width` or
-        `height` exceed the dimensions of MuJoCo's offscreen framebuf
+        `height` exceed the dimensions of MuJoCo's offscreen framebuffer.
+    """
+    buffer_width = physics.model.vis.global_.offwidth
+    buffer_height = physics.model.vis.global_.offheight
+    if width > buffer_width:
+      raise ValueError('Image width {} > framebuffer width {}. Either reduce '
+                       'the image width or specify a larger offscreen '
+                       'framebuffer in the model XML using the clause\n'
+                       '<visual>\n'
+                       '  <global offwidth="my_width"/>\n'
+                       '</visual>'.format(width, buffer_width))
+    if height > buf
