@@ -637,4 +637,12 @@ class Camera:
       camera_id: Optional camera name or index. Defaults to -1, the free
         camera, which is always defined. A nonnegative integer or string
         corresponds to a fixed camera, which must be defined in the model XML.
-        If `camera_id` i
+        If `camera_id` is a string then the camera must also be named.
+      max_geom: Optional integer specifying the maximum number of geoms that can
+        be rendered in the same scene. If None this will be chosen automatically
+        based on the estimated maximum number of renderable geoms in the model.
+      scene_callback: Called after the scene has been created and before
+        it is rendered. Can be used to add more geoms to the scene.
+    Raises:
+      ValueError: If `camera_id` is outside the valid range, or if `width` or
+        `height` exceed the dimensions of MuJoCo's offscreen framebuf
