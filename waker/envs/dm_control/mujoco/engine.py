@@ -684,4 +684,18 @@ class Camera:
     self._perturb.active = 0
     self._perturb.select = 0
 
-    s
+    self._rect = mujoco.MjrRect(0, 0, self._width, self._height)
+
+    self._render_camera = wrapper.MjvCamera()
+    self._render_camera.fixedcamid = camera_id
+
+    if camera_id == -1:
+      self._render_camera.type = mujoco.mjtCamera.mjCAMERA_FREE
+      mujoco.mjv_defaultFreeCamera(physics.model._model, self._render_camera)
+    else:
+      # As defined in the Mujoco documentation, mjCAMERA_FIXED refers to a
+      # camera explicitly defined in the model.
+      self._render_camera.type = mujoco.mjtCamera.mjCAMERA_FIXED
+
+    # Internal buffers.
+    self._rgb_buffer = np.empty((self._height, sel
