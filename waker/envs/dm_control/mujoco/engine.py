@@ -667,4 +667,21 @@ class Camera:
       camera_id = physics.model.name2id(camera_id, 'camera')
     if camera_id < -1:
       raise ValueError('camera_id cannot be smaller than -1.')
-    if c
+    if camera_id >= physics.model.ncam:
+      raise ValueError('model has {} fixed cameras. camera_id={} is invalid.'.
+                       format(physics.model.ncam, camera_id))
+
+    self._width = width
+    self._height = height
+    self._physics = physics
+    self._scene_callback = scene_callback
+
+    # Variables corresponding to structs needed by Mujoco's rendering functions.
+    self._scene = wrapper.MjvScene(model=physics.model, max_geom=max_geom)
+    self._scene_option = wrapper.MjvOption()
+
+    self._perturb = wrapper.MjvPerturb()
+    self._perturb.active = 0
+    self._perturb.select = 0
+
+    s
