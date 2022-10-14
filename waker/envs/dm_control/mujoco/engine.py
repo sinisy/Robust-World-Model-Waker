@@ -735,4 +735,13 @@ class Camera:
     """
     camera_id = self._render_camera.fixedcamid
     if camera_id == -1:
-      # If the camera is a 'free' camera, we get i
+      # If the camera is a 'free' camera, we get its position and orientation
+      # from the scene data structure. It is a stereo camera, so we average over
+      # the left and right channels. Note: we call `self.update()` in order to
+      # ensure that the contents of `scene.camera` are correct.
+      self.update()
+      pos = np.mean([camera.pos for camera in self.scene.camera], axis=0)
+      z = -np.mean([camera.forward for camera in self.scene.camera], axis=0)
+      y = np.mean([camera.up for camera in self.scene.camera], axis=0)
+      rot = np.vstack((np.cross(y, z), y, z))
+      fov = self._physics.model.vis.global_.fov
