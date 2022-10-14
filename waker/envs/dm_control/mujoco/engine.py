@@ -744,4 +744,21 @@ class Camera:
       z = -np.mean([camera.forward for camera in self.scene.camera], axis=0)
       y = np.mean([camera.up for camera in self.scene.camera], axis=0)
       rot = np.vstack((np.cross(y, z), y, z))
-      fov = self._physics.model.vis.global_.fov
+      fov = self._physics.model.vis.global_.fovy
+    else:
+      pos = self._physics.data.cam_xpos[camera_id]
+      rot = self._physics.data.cam_xmat[camera_id].reshape(3, 3).T
+      fov = self._physics.model.cam_fovy[camera_id]
+
+    # Translation matrix (4x4).
+    translation = np.eye(4)
+    translation[0:3, 3] = -pos
+    # Rotation matrix (4x4).
+    rotation = np.eye(4)
+    rotation[0:3, 0:3] = rot
+    # Focal transformation matrix (3x4).
+    focal_scaling = (1./np.tan(np.deg2rad(fov)/2)) * self.height / 2.0
+    focal = np.diag([-focal_scaling, focal_scaling, 1.0, 0])[0:3, :]
+    # Image matrix (3x3).
+    image = np.eye(3)
+    image[0, 2] = (self.wi
