@@ -717,4 +717,22 @@ class Camera:
     return self._height
 
   @property
-  def option(se
+  def option(self):
+    """Returns the camera's visualization options."""
+    return self._scene_option
+
+  @property
+  def scene(self):
+    """Returns the `mujoco.MjvScene` instance used by the camera."""
+    return self._scene
+
+  def matrices(self) -> CameraMatrices:
+    """Computes the component matrices used to compute the camera matrix.
+
+    Returns:
+      An instance of `CameraMatrices` containing the image, focal, rotation, and
+      translation matrices of the camera.
+    """
+    camera_id = self._render_camera.fixedcamid
+    if camera_id == -1:
+      # If the camera is a 'free' camera, we get i
