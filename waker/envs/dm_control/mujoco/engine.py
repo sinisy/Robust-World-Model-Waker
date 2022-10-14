@@ -698,4 +698,23 @@ class Camera:
       self._render_camera.type = mujoco.mjtCamera.mjCAMERA_FIXED
 
     # Internal buffers.
-    self._rgb_buffer = np.empty((self._height, sel
+    self._rgb_buffer = np.empty((self._height, self._width, 3), dtype=np.uint8)
+    self._depth_buffer = np.empty((self._height, self._width), dtype=np.float32)
+
+    if self._physics.contexts.mujoco is not None:
+      with self._physics.contexts.gl.make_current() as ctx:
+        ctx.call(mujoco.mjr_setBuffer, mujoco.mjtFramebuffer.mjFB_OFFSCREEN,
+                 self._physics.contexts.mujoco.ptr)
+
+  @property
+  def width(self):
+    """Returns the image width (number of pixels)."""
+    return self._width
+
+  @property
+  def height(self):
+    """Returns the image height (number of pixels)."""
+    return self._height
+
+  @property
+  def option(se
