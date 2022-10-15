@@ -761,4 +761,23 @@ class Camera:
     focal = np.diag([-focal_scaling, focal_scaling, 1.0, 0])[0:3, :]
     # Image matrix (3x3).
     image = np.eye(3)
-    image[0, 2] = (self.wi
+    image[0, 2] = (self.width - 1) / 2.0
+    image[1, 2] = (self.height - 1) / 2.0
+    return CameraMatrices(
+        image=image, focal=focal, rotation=rotation, translation=translation)
+
+  @property
+  def matrix(self):
+    """Returns the 3x4 camera matrix.
+
+    For a description of the camera matrix see, e.g.,
+    https://en.wikipedia.org/wiki/Camera_matrix.
+    For a usage example, see the associated test.
+    """
+    image, focal, rotation, translation = self.matrices()
+    return image @ focal @ rotation @ translation
+
+  def update(self, scene_option=None):
+    """Updates geometry used for rendering.
+
+    
