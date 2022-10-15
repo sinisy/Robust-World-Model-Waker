@@ -793,4 +793,19 @@ class Camera:
   def _render_on_gl_thread(self, depth, overlays):
     """Performs only those rendering calls that require an OpenGL context."""
 
-   
+    # Render the scene.
+    mujoco.mjr_render(self._rect, self._scene.ptr,
+                      self._physics.contexts.mujoco.ptr)
+
+    if not depth:
+      # If rendering RGB, draw any text overlays on top of the image.
+      for overlay in overlays:
+        overlay.draw(self._physics.contexts.mujoco.ptr, self._rect)
+
+    # Read the contents of either the RGB or depth buffer.
+    mujoco.mjr_readPixels(self._rgb_buffer if not depth else None,
+                          self._depth_buffer if depth else None, self._rect,
+                          self._physics.contexts.mujoco.ptr)
+
+  def render(
+      s
