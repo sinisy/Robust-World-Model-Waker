@@ -780,4 +780,17 @@ class Camera:
   def update(self, scene_option=None):
     """Updates geometry used for rendering.
 
-    
+    Args:
+      scene_option: A custom `wrapper.MjvOption` instance to use to render
+        the scene instead of the default.  If None, will use the default.
+    """
+    scene_option = scene_option or self._scene_option
+    mujoco.mjv_updateScene(self._physics.model.ptr, self._physics.data.ptr,
+                           scene_option.ptr, self._perturb.ptr,
+                           self._render_camera.ptr, mujoco.mjtCatBit.mjCAT_ALL,
+                           self._scene.ptr)
+
+  def _render_on_gl_thread(self, depth, overlays):
+    """Performs only those rendering calls that require an OpenGL context."""
+
+   
