@@ -808,4 +808,19 @@ class Camera:
                           self._physics.contexts.mujoco.ptr)
 
   def render(
-      s
+      self,
+      overlays=(),
+      depth=False,
+      segmentation=False,
+      scene_option=None,
+      render_flag_overrides=None,
+  ):
+    """Renders the camera view as a numpy array of pixel values.
+
+    Args:
+      overlays: An optional sequence of `TextOverlay` instances to draw. Only
+        supported if `depth` and `segmentation` are both False.
+      depth: An optional boolean. If True, makes the camera return depth
+        measurements. Cannot be enabled if `segmentation` is True.
+      segmentation: An optional boolean. If True, make the camera return a
+        pixel-wise se
