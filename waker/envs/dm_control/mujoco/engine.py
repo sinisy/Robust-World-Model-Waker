@@ -823,4 +823,12 @@ class Camera:
       depth: An optional boolean. If True, makes the camera return depth
         measurements. Cannot be enabled if `segmentation` is True.
       segmentation: An optional boolean. If True, make the camera return a
-        pixel-wise se
+        pixel-wise segmentation of the scene. Cannot be enabled if `depth` is
+        True.
+      scene_option: A custom `wrapper.MjvOption` instance to use to render
+        the scene instead of the default.  If None, will use the default.
+      render_flag_overrides: Optional mapping containing rendering flags to
+        override. The keys can be either lowercase strings or `mjtRndFlag` enum
+        values, and the values are the overridden flag values, e.g.
+        `{'wireframe': True}` or `{mujoco.mjtRndFlag.mjRND_WIREFRAME: True}`.
+        See `mujoco.mjtRndFlag` for the set of valid flags
