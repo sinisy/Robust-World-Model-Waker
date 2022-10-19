@@ -843,4 +843,18 @@ class Camera:
         * If `segmentation` is True, this is a (height, width, 2) int32 numpy
           array where the first channel contains the integer ID of the object at
           each pixel, and the second channel contains the corresponding object
- 
+          type (a value in the `mjtObj` enum). Background pixels are labeled
+          (-1, -1).
+
+    Raises:
+      ValueError: If either `overlays` or `render_flag_overrides` is requested
+        when `depth` or `segmentation` rendering is enabled.
+      ValueError: If both depth and segmentation flags are set together.
+    """
+
+    if overlays and (depth or segmentation):
+      raise ValueError(_OVERLAYS_NOT_SUPPORTED_FOR_DEPTH_OR_SEGMENTATION)
+
+    if render_flag_overrides and (depth or segmentation):
+      raise ValueError(
+          _RENDER_FLAG_OVERRIDES_NOT
