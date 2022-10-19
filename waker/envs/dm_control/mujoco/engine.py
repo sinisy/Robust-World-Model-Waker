@@ -831,4 +831,16 @@ class Camera:
         override. The keys can be either lowercase strings or `mjtRndFlag` enum
         values, and the values are the overridden flag values, e.g.
         `{'wireframe': True}` or `{mujoco.mjtRndFlag.mjRND_WIREFRAME: True}`.
-        See `mujoco.mjtRndFlag` for the set of valid flags
+        See `mujoco.mjtRndFlag` for the set of valid flags. Must be empty if
+        either `depth` or `segmentation` is True.
+
+    Returns:
+      The rendered scene.
+        * If `depth` and `segmentation` are both False (default), this is a
+          (height, width, 3) uint8 numpy array containing RGB values.
+        * If `depth` is True, this is a (height, width) float32 numpy array
+          containing depth values (in meters).
+        * If `segmentation` is True, this is a (height, width, 2) int32 numpy
+          array where the first channel contains the integer ID of the object at
+          each pixel, and the second channel contains the corresponding object
+ 
