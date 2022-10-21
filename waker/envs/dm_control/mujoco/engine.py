@@ -889,4 +889,15 @@ class Camera:
       near = self._physics.model.vis.map.znear * extent
       far = self._physics.model.vis.map.zfar * extent
       # Convert from [0 1] to depth in meters, see links below:
-      # http://stackove
+      # http://stackoverflow.com/a/6657284/1461210
+      # https://www.khronos.org/opengl/wiki/Depth_Buffer_Precision
+      image = near / (1 - self._depth_buffer * (1 - near / far))
+    elif segmentation:
+      # Convert 3-channel uint8 to 1-channel uint32.
+      image3 = self._rgb_buffer.astype(np.uint32)
+      segimage = (image3[:, :, 0] +
+                  image3[:, :, 1] * (2**8) +
+                  image3[:, :, 2] * (2**16))
+      # Remap segid to 2-channel (object ID, object type) pair.
+      # Seg ID 0 is background -- will be remapped to (-1, -1).
+      segid2output
