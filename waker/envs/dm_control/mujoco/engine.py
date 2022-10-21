@@ -857,4 +857,25 @@ class Camera:
 
     if render_flag_overrides and (depth or segmentation):
       raise ValueError(
-          _RENDER_FLAG_OVERRIDES_NOT
+          _RENDER_FLAG_OVERRIDES_NOT_SUPPORTED_FOR_DEPTH_OR_SEGMENTATION)
+
+    if depth and segmentation:
+      raise ValueError(_BOTH_SEGMENTATION_AND_DEPTH_ENABLED)
+
+    if render_flag_overrides is None:
+      render_flag_overrides = {}
+
+    # Update scene geometry.
+    self.update(scene_option=scene_option)
+
+    if self._scene_callback:
+      self._scene_callback(self._physics, self._scene)
+
+    # Enable flags to compute segmentation labels
+    if segmentation:
+      render_flag_overrides.update({
+          mujoco.mjtRndFlag.mjRND_SEGMENT: True,
+          mujoco.mjtRndFlag.mjRND_IDCOLOR: True,
+      })
+
+    # Render scene and tex
