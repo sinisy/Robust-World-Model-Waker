@@ -878,4 +878,15 @@ class Camera:
           mujoco.mjtRndFlag.mjRND_IDCOLOR: True,
       })
 
-    # Render scene and tex
+    # Render scene and text overlays, read contents of RGB or depth buffer.
+    with self.scene.override_flags(render_flag_overrides):
+      with self._physics.contexts.gl.make_current() as ctx:
+        ctx.call(self._render_on_gl_thread, depth=depth, overlays=overlays)
+
+    if depth:
+      # Get the distances to the near and far clipping planes.
+      extent = self._physics.model.stat.extent
+      near = self._physics.model.vis.map.znear * extent
+      far = self._physics.model.vis.map.zfar * extent
+      # Convert from [0 1] to depth in meters, see links below:
+      # http://stackove
