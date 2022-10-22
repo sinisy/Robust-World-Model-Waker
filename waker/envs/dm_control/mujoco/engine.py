@@ -910,4 +910,22 @@ class Camera:
       segid2output[visible_segids, 1] = visible_objtype
       image = segid2output[segimage]
     else:
- 
+      image = self._rgb_buffer
+
+    # The first row in the buffer is the bottom row of pixels in the image.
+    return np.flipud(image)
+
+  def select(self, cursor_position):
+    """Returns bodies and geoms visible at given coordinates in the frame.
+
+    Args:
+      cursor_position:  A `tuple` containing x and y coordinates, normalized to
+        between 0 and 1, and where (0, 0) is bottom-left.
+
+    Returns:
+      A `Selected` namedtuple. Fields are None if nothing is selected.
+    """
+    self.update()
+    aspect_ratio = self._width / self._height
+    cursor_x, cursor_y = cursor_position
+    pos = np.empty(3, np.doubl
