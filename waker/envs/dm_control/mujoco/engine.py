@@ -900,4 +900,14 @@ class Camera:
                   image3[:, :, 2] * (2**16))
       # Remap segid to 2-channel (object ID, object type) pair.
       # Seg ID 0 is background -- will be remapped to (-1, -1).
-      segid2output
+      segid2output = np.full((self._scene.ngeom + 1, 2), fill_value=-1,
+                             dtype=np.int32)  # Seg id cannot be > ngeom + 1.
+      visible_geoms = [g for g in self._scene.geoms if g.segid != -1]
+      visible_segids = np.array([g.segid + 1 for g in visible_geoms], np.int32)
+      visible_objid = np.array([g.objid for g in visible_geoms], np.int32)
+      visible_objtype = np.array([g.objtype for g in visible_geoms], np.int32)
+      segid2output[visible_segids, 0] = visible_objid
+      segid2output[visible_segids, 1] = visible_objtype
+      image = segid2output[segimage]
+    else:
+ 
