@@ -928,4 +928,20 @@ class Camera:
     self.update()
     aspect_ratio = self._width / self._height
     cursor_x, cursor_y = cursor_position
-    pos = np.empty(3, np.doubl
+    pos = np.empty(3, np.double)
+    geom_id_arr = np.intc([-1])
+    skin_id_arr = np.intc([-1])
+    body_id = mujoco.mjv_select(self._physics.model.ptr, self._physics.data.ptr,
+                                self._scene_option.ptr, aspect_ratio, cursor_x,
+                                cursor_y, self._scene.ptr, pos, geom_id_arr,
+                                skin_id_arr)
+    [geom_id] = geom_id_arr
+    [skin_id] = skin_id_arr
+
+    # Validate IDs
+    if body_id != -1:
+      assert 0 <= body_id < self._physics.model.nbody
+    else:
+      body_id = None
+    if geom_id != -1:
+      assert 0 <= geom_id < 
