@@ -944,4 +944,28 @@ class Camera:
     else:
       body_id = None
     if geom_id != -1:
-      assert 0 <= geom_id < 
+      assert 0 <= geom_id < self._physics.model.ngeom
+    else:
+      geom_id = None
+    if skin_id != -1:
+      assert 0 <= skin_id < self._physics.model.nskin
+    else:
+      skin_id = None
+
+    if all(id_ is None for id_ in (body_id, geom_id, skin_id)):
+      pos = None
+
+    return Selected(
+        body=body_id, geom=geom_id, skin=skin_id, world_position=pos)
+
+
+class MovableCamera(Camera):
+  """Subclass of `Camera` that can be moved by changing its pose.
+
+  A `MovableCamera` always corresponds to a MuJoCo free camera with id -1.
+  """
+
+  def __init__(
+      self,
+      physics: Physics,
+ 
