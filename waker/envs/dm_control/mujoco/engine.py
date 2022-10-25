@@ -1011,4 +1011,22 @@ class MovableCamera(Camera):
       azimuth: Azimuth in degrees.
       elevation: Elevation in degrees.
     """
-    np.copyto(self._render_c
+    np.copyto(self._render_camera.lookat, lookat)
+    self._render_camera.distance = distance
+    self._render_camera.azimuth = azimuth
+    self._render_camera.elevation = elevation
+
+
+class TextOverlay:
+  """A text overlay that can be drawn on top of a camera view."""
+
+  __slots__ = ('title', 'body', 'style', 'position')
+
+  def __init__(self, title='', body='', style='normal', position='top left'):
+    """Initializes a new TextOverlay instance.
+
+    Args:
+      title: Title text.
+      body: Body text.
+      style: The font style. Can be either "normal", "shadow", or "big".
+      position: The grid position
