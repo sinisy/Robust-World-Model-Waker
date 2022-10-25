@@ -995,4 +995,20 @@ class MovableCamera(Camera):
     Returns:
       A `Pose` named tuple with fields:
         lookat: NumPy array specifying lookat point.
-       
+        distance: Float specifying distance to `lookat`.
+        azimuth: Azimuth in degrees.
+        elevation: Elevation in degrees.
+    """
+    return Pose(self._render_camera.lookat, self._render_camera.distance,
+                self._render_camera.azimuth, self._render_camera.elevation)
+
+  def set_pose(self, lookat, distance, azimuth, elevation):
+    """Sets the pose of the camera.
+
+    Args:
+      lookat: NumPy array or list specifying lookat point.
+      distance: Float specifying distance to `lookat`.
+      azimuth: Azimuth in degrees.
+      elevation: Elevation in degrees.
+    """
+    np.copyto(self._render_c
