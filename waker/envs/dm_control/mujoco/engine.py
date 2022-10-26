@@ -1046,4 +1046,17 @@ class TextOverlay:
     """
     mujoco.mjr_overlay(self.style, self.position, rect,
                        util.to_binary_string(self.title),
-                       util.to_binary_string(self
+                       util.to_binary_string(self.body), context)
+
+
+def action_spec(physics):
+  """Returns a `BoundedArraySpec` matching the `physics` actuators."""
+  num_actions = physics.model.nu
+  is_limited = physics.model.actuator_ctrllimited.ravel().astype(bool)
+  control_range = physics.model.actuator_ctrlrange
+  minima = np.full(num_actions, fill_value=-mujoco.mjMAXVAL, dtype=float)
+  maxima = np.full(num_actions, fill_value=mujoco.mjMAXVAL, dtype=float)
+  minima[is_limited], maxima[is_limited] = control_range[is_limited].T
+
+  return specs.BoundedArray(
+      shap
