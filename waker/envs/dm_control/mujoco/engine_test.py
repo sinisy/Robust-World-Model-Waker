@@ -540,3 +540,105 @@ class MujocoEngineTest(parameterized.TestCase):
         physics2.model, self._physics.model, model_attr_to_compare)
     data_attr_to_compare = ('time', 'energy', 'qpos', 'xpos')
     self._assert_attributes_equal(
+        physics2.data, self._physics.data, data_attr_to_compare)
+    for _ in range(10):
+      self._physics.step()
+      physics2.step()
+    self._assert_attributes_equal(
+        physics2.model, self._physics.model, model_attr_to_compare)
+    self._assert_attributes_equal(
+        physics2.data, self._physics.data, data_attr_to_compare)
+
+  @parameterized.named_parameters(
+      ('_copy', lambda x: x.copy()),
+      ('_pickle_and_unpickle', lambda x: pickle.loads(pickle.dumps(x))),
+  )
+  def testSuppressErrorsAfterCopyOrPicklePhysics(self, func):
+    # Regression test for a problem that used to exist where
+    # suppress_physics_errors couldn't be used on Physics objects that were
+    # unpickled.
+    physics2 = func(self._physics)
+    with physics2.suppress_physics_errors():
+      pass
+
+  def testCopyDataOnly(self):
+    physics2 = self._physics.copy(share_model=True)
+    self.assertEqual(physics2.model.ptr, self._physics.model.ptr)
+    self.assertNotEqual(physics2.data.ptr, self._physics.data.ptr)
+
+  def testForwardDynamicsUpdatedAfterReset(self):
+    gravity = -9.81
+    self._physics.model.opt.gravity[2] = gravity
+    with self._physics.reset_context():
+      pass
+    self.assertAlmostEqual(
+        self._physics.named.data.sensordata['accelerometer'][2], -gravity)
+
+  def testActuationNotAppliedInAfterReset(self):
+    self._physics.data.ctrl[0] = 1.
+    self._physics.after_reset()  # Calls `forward()` with actuation disabled.
+    self.assertEqual(self._physics.data.actuator_force[0], 0.)
+    self._physics.forward()  # Call `forward` directly with actuation enabled.
+    self.assertEqual(self._physics.data.actuator_force[0], 1.)
+
+  def testActionSpec(self):
+    xml = """
+    <mujoco>
+      <worldbody>
+        <body>
+          <geom type="sphere" size="0.1"/>
+          <joint type="hinge" name="hinge"/>
+        </body>
+      </worldbody>
+      <actuator>
+        <motor joint="hinge" ctrllimited="false"/>
+        <motor joint="hinge" ctrllimited="true" ctrlrange="-1 2"/>
+      </actuator>
+    </mujoco>
+    """
+    physics = engine.Physics.from_xml_string(xml)
+    spec = engine.action_spec(physics)
+    self.assertEqual(float, spec.dtype)
+    np.testing.assert_array_equal(spec.minimum, [-mujoco.mjMAXVAL, -1.0])
+    np.testing.assert_array_equal(spec.maximum, [mujoco.mjMAXVAL, 2.0])
+
+  def testNstep(self):
+    # Make initial state.
+    with self._physics.reset_context():
+      self._physics.data.qvel[0] = 1
+      self._physics.data.qvel[1] = 1
+    initial_state = self._physics.get_state()
+
+    # step() 4 times.
+    for _ in range(4):
+      self._physics.step()
+    for_loop_state = self._physics.get_state()
+
+    # Reset state, call step(4).
+    with self._physics.reset_context():
+      self._physics.set_state(initial_state)
+    self._physics.step(4)
+    nstep_state = self._physics.get_state()
+
+    np.testing.assert_array_equal(for_loop_state, nstep_state)
+
+    # Repeat test with with RK4 integrator:
+    self._physics.model.opt.integrator = enums.mjtIntegrator.mjINT_RK4
+
+    # step() 4 times.
+    with self._physics.reset_context():
+      self._physics.set_state(initial_state)
+    for _ in range(4):
+      self._physics.step()
+    for_loop_state_rk4 = self._physics.get_state()
+
+    # Reset state, call step(4).
+    with self._physics.reset_context():
+      self._physics.set_state(initial_state)
+    self._physics.step(4)
+    nstep_state_rk4 = self._physics.get_state()
+
+    np.testing.assert_array_equal(for_loop_state_rk4, nstep_state_rk4)
+
+if __name__ == '__main__':
+  absltest.main()
