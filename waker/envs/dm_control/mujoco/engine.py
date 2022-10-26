@@ -1059,4 +1059,4 @@ def action_spec(physics):
   minima[is_limited], maxima[is_limited] = control_range[is_limited].T
 
   return specs.BoundedArray(
-      shap
+      shape=(num_actions,), dtype=float, minimum=minima, maximum=maxima)
