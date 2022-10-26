@@ -1029,4 +1029,21 @@ class TextOverlay:
       title: Title text.
       body: Body text.
       style: The font style. Can be either "normal", "shadow", or "big".
-      position: The grid position
+      position: The grid position of the overlay. Can be either "top left",
+        "top right", "bottom left", or "bottom right".
+    """
+    self.title = title
+    self.body = body
+    self.style = _FONT_STYLES[style]
+    self.position = _GRID_POSITIONS[position]
+
+  def draw(self, context, rect):
+    """Draws the overlay.
+
+    Args:
+      context: A `mujoco.MjrContext` pointer.
+      rect: A `mujoco.MjrRect`.
+    """
+    mujoco.mjr_overlay(self.style, self.position, rect,
+                       util.to_binary_string(self.title),
+                       util.to_binary_string(self
