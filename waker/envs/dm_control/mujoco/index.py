@@ -38,4 +38,14 @@ for each size name.
 By iterating over each of these element name address arrays, we first obtain a
 mapping from size names to a list of element names.
 
-    {'nbody': ['cart', 'pole'], 'njnt': ['free', 
+    {'nbody': ['cart', 'pole'], 'njnt': ['free', 'ball', 'hinge'], ...}
+
+In addition to the element names that are derived from the mjModel struct at
+runtime, we also assign hard-coded names to certain dimensions where there is an
+established naming convention (e.g. 'x', 'y', 'z' for dimensions that correspond
+to Cartesian positions).
+
+For some dimensions, a single element name maps to multiple indices within the
+underlying field. For example, a single joint name corresponds to a variable
+number of indices within `qpos` that depends on the number of degrees of freedom
+associated with that joint type. These are referred to as "ragged" dimensio
