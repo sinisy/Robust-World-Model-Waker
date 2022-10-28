@@ -25,4 +25,17 @@ example
    X(mjtNum, body_pos,     nbody, 3)
      a       b             c ----->
 
-The sec
+The second declaration states that the field `body_pos` has type `mjtNum` and
+dimension sizes `(nbody, 3)`, i.e. the first axis is indexed by body number.
+These and other named dimensions are sized based on the loaded model. This
+information is parsed and stored in `mjbindings.sizes`.
+
+In mjmodel.h, the struct mjModel contains an array of element name addresses
+for each size name.
+
+   int* name_bodyadr; // body name pointers (nbody x 1)
+
+By iterating over each of these element name address arrays, we first obtain a
+mapping from size names to a list of element names.
+
+    {'nbody': ['cart', 'pole'], 'njnt': ['free', 
