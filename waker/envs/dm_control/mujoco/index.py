@@ -48,4 +48,18 @@ to Cartesian positions).
 For some dimensions, a single element name maps to multiple indices within the
 underlying field. For example, a single joint name corresponds to a variable
 number of indices within `qpos` that depends on the number of degrees of freedom
-associated with that joint type. These are referred to as "ragged" dimensio
+associated with that joint type. These are referred to as "ragged" dimensions.
+
+In such cases we determine the size of each named element by examining the
+address arrays (e.g. `jnt_qposadr`), and construct a mapping from size name to
+element sizes:
+
+    {'nq': [7, 3, 1], 'nv': [6, 3, 1], ...}
+
+Given these two dictionaries, we then create an `Axis` instance for each size
+name. These objects have a `convert_key_item` method that handles the conversion
+from indexing expressions containing element names to valid numpy indices.
+Different implementations of `Axis` are used to handle "ragged" and "non-ragged"
+dimensions.
+
+    {'nbody': RegularNamedAxis(names
