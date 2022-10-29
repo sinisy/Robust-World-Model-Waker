@@ -62,4 +62,18 @@ from indexing expressions containing element names to valid numpy indices.
 Different implementations of `Axis` are used to handle "ragged" and "non-ragged"
 dimensions.
 
-    {'nbody': RegularNamedAxis(names
+    {'nbody': RegularNamedAxis(names=['cart', 'pole']),
+     'nq': RaggedNamedAxis(names=['free', 'ball', 'hinge'], sizes=[7, 4, 1])}
+
+We construct this dictionary once using `make_axis_indexers`.
+
+Finally, for each field we construct a `FieldIndexer` class. A `FieldIndexer`
+instance encapsulates a field together with a list of `Axis` instances (one per
+dimension), and implements the named indexing logic by calling their respective
+`convert_key_item` methods.
+
+Summary of terminology:
+
+* _size name_ or _size_ A dimension size name, e.g. `nbody` or `ngeom`.
+* _element name_ or _name_ A named element in a Mujoco model, e.g. 'cart' or
+  'pole
