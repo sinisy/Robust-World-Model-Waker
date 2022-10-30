@@ -76,4 +76,31 @@ Summary of terminology:
 
 * _size name_ or _size_ A dimension size name, e.g. `nbody` or `ngeom`.
 * _element name_ or _name_ A named element in a Mujoco model, e.g. 'cart' or
-  'pole
+  'pole'.
+* _element index_ or _index_ The index of an element name, for a specific size
+  name.
+"""
+
+import abc
+import collections
+import weakref
+
+from dm_control.mujoco.wrapper import util
+from dm_control.mujoco.wrapper.mjbindings import sizes
+import numpy as np
+
+
+# Mapping from {size_name: address_field_name} for ragged dimensions.
+_RAGGED_ADDRS = {
+    'nq': 'jnt_qposadr',
+    'nv': 'jnt_dofadr',
+    'na': 'actuator_actadr',
+    'nsensordata': 'sensor_adr',
+    'nnumericdata': 'numeric_adr',
+}
+
+# Names of columns.
+_COLUMN_NAMES = {
+    'xyz': ['x', 'y', 'z'],
+    'quat': ['qw', 'qx', 'qy', 'qz'],
+ 
