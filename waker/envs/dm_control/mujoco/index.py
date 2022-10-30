@@ -103,4 +103,26 @@ _RAGGED_ADDRS = {
 _COLUMN_NAMES = {
     'xyz': ['x', 'y', 'z'],
     'quat': ['qw', 'qx', 'qy', 'qz'],
- 
+    'mat': ['xx', 'xy', 'xz',
+            'yx', 'yy', 'yz',
+            'zx', 'zy', 'zz'],
+    'rgba': ['r', 'g', 'b', 'a'],
+}
+
+# Mapping from keys of _COLUMN_NAMES to sets of field names whose columns are
+# addressable using those names.
+_COLUMN_ID_TO_FIELDS = {
+    'xyz': set([
+        'body_pos',
+        'body_ipos',
+        'body_inertia',
+        'jnt_pos',
+        'jnt_axis',
+        'geom_size',
+        'geom_pos',
+        'site_size',
+        'site_pos',
+        'cam_pos',
+        'cam_poscom0',
+        'cam_pos0',
+        'l
