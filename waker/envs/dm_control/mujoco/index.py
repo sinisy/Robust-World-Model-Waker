@@ -154,3 +154,36 @@ _COLUMN_ID_TO_FIELDS = {
         'site_quat',
         'cam_quat',
         'mocap_quat',
+        'xquat',
+    ]),
+    'mat': set([
+        'cam_mat0',
+        'xmat',
+        'ximat',
+        'geom_xmat',
+        'site_xmat',
+        'cam_xmat',
+    ]),
+    'rgba': set([
+        'geom_rgba',
+        'site_rgba',
+        'skin_rgba',
+        'mat_rgba',
+        'tendon_rgba',
+    ])
+}
+
+
+def _get_size_name_to_element_names(model):
+  """Returns a dict that maps size names to element names.
+
+  Args:
+    model: An instance of `mjbindings.mjModelWrapper`.
+
+  Returns:
+    A `dict` mapping from a size name (e.g. `'nbody'`) to a list of element
+    names.
+  """
+
+  names = model.names
+  size_name_to_element
