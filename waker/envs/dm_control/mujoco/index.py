@@ -203,4 +203,18 @@ def _get_size_name_to_element_names(model):
     element_names = []
     for start_index in name_addresses:
       end_index = names.find(b'\0', start_index)
-      name = names[start_ind
+      name = names[start_index:end_index]
+      element_names.append(str(name, 'utf-8'))
+
+    # String identifier for the size of the first dimension, e.g. 'nbody'.
+    size_name = _get_size_name(field_name)
+
+    size_name_to_element_names[size_name] = element_names
+
+  # Add custom element names for certain columns.
+  for size_name, element_names in _COLUMN_NAMES.items():
+    size_name_to_element_names[size_name] = element_names
+
+  # "Ragged" axes inherit their element names from other "non-ragged" axes.
+  # For example, the element names for "nv" axis come from "njnt".
+  for size_name, address_field_name i
