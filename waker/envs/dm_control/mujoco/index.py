@@ -186,4 +186,21 @@ def _get_size_name_to_element_names(model):
   """
 
   names = model.names
-  size_name_to_element
+  size_name_to_element_names = {}
+
+  for field_name in dir(model.ptr):
+    if not _is_name_pointer(field_name):
+      continue
+
+    # Get addresses of element names in `model.names` array, e.g.
+    # field name: `name_nbodyadr` and name_addresses: `[86, 92, 101]`, and skip
+    # when there are no elements for this type in the model.
+    name_addresses = getattr(model, field_name).ravel()
+    if not name_addresses.size:
+      continue
+
+    # Get the element names.
+    element_names = []
+    for start_index in name_addresses:
+      end_index = names.find(b'\0', start_index)
+      name = names[start_ind
