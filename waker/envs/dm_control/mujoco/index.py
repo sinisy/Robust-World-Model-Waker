@@ -217,4 +217,17 @@ def _get_size_name_to_element_names(model):
 
   # "Ragged" axes inherit their element names from other "non-ragged" axes.
   # For example, the element names for "nv" axis come from "njnt".
-  for size_name, address_field_name i
+  for size_name, address_field_name in _RAGGED_ADDRS.items():
+    donor = 'n' + address_field_name.split('_')[0]
+    if donor == 'nactuator':
+      donor = 'nu'
+    if donor in size_name_to_element_names:
+      size_name_to_element_names[size_name] = size_name_to_element_names[donor]
+
+  # Mocap bodies are a special subset of bodies.
+  mocap_body_names = [None] * model.nmocap
+  for body_id, body_name in enumerate(size_name_to_element_names['nbody']):
+    body_mocapid = model.body_mocapid[body_id]
+    if body_mocapid != -1:
+      mocap_body_names[body_mocapid] = body_name
+  a
