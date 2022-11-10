@@ -250,4 +250,22 @@ def _get_size_name_to_element_sizes(model):
   size_name_to_element_sizes = {}
 
   for size_name, address_field_name in _RAGGED_ADDRS.items():
-    address
+    addresses = getattr(model, address_field_name).ravel()
+    if size_name == 'na':
+      element_sizes = np.where(addresses == -1, 0, 1)
+    else:
+      total_length = getattr(model, size_name)
+      element_sizes = np.diff(np.r_[addresses, total_length])
+    size_name_to_element_sizes[size_name] = element_sizes
+
+  return size_name_to_element_sizes
+
+
+def make_axis_indexers(model):
+  """Returns a dict that maps size names to `Axis` indexers.
+
+  Args:
+    model: An instance of `mjbindings.MjModelWrapper`.
+
+  Returns:
+    A `dict` mapping from a size name (e.g. `'nbody'`) to an 
