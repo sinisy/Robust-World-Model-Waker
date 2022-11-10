@@ -268,4 +268,19 @@ def make_axis_indexers(model):
     model: An instance of `mjbindings.MjModelWrapper`.
 
   Returns:
-    A `dict` mapping from a size name (e.g. `'nbody'`) to an 
+    A `dict` mapping from a size name (e.g. `'nbody'`) to an `Axis` instance.
+  """
+
+  size_name_to_element_names = _get_size_name_to_element_names(model)
+  size_name_to_element_sizes = _get_size_name_to_element_sizes(model)
+
+  # Unrecognized size names are treated as unnamed axes.
+  axis_indexers = collections.defaultdict(UnnamedAxis)
+
+  for size_name in size_name_to_element_names:
+    element_names = size_name_to_element_names[size_name]
+    if size_name in _RAGGED_ADDRS:
+      element_sizes = size_name_to_element_sizes[size_name]
+      singleton = (size_name == 'na')
+      indexer = RaggedNamedAxis(element_names, element_sizes,
+      
