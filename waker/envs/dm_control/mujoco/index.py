@@ -230,4 +230,24 @@ def _get_size_name_to_element_names(model):
     body_mocapid = model.body_mocapid[body_id]
     if body_mocapid != -1:
       mocap_body_names[body_mocapid] = body_name
-  a
+  assert None not in mocap_body_names
+  size_name_to_element_names['nmocap'] = mocap_body_names
+
+  return size_name_to_element_names
+
+
+def _get_size_name_to_element_sizes(model):
+  """Returns a dict that maps size names to element sizes for ragged axes.
+
+  Args:
+    model: An instance of `mjbindings.mjModelWrapper`.
+
+  Returns:
+    A `dict` mapping from a size name (e.g. `'nv'`) to a numpy array of element
+      sizes. Size names corresponding to non-ragged axes are omitted.
+  """
+
+  size_name_to_element_sizes = {}
+
+  for size_name, address_field_name in _RAGGED_ADDRS.items():
+    address
