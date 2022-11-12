@@ -283,4 +283,21 @@ def make_axis_indexers(model):
       element_sizes = size_name_to_element_sizes[size_name]
       singleton = (size_name == 'na')
       indexer = RaggedNamedAxis(element_names, element_sizes,
-      
+                                singleton=singleton)
+    else:
+      indexer = RegularNamedAxis(element_names)
+    axis_indexers[size_name] = indexer
+
+  return axis_indexers
+
+
+def _is_name_pointer(field_name):
+  """Returns True for name pointer field names such as `name_bodyadr`."""
+  # Denotes name pointer fields in mjModel.
+  prefix, suffix = 'name_', 'adr'
+  return field_name.startswith(prefix) and field_name.endswith(suffix)
+
+
+def _get_size_name(field_name, struct_name='mjmodel'):
+  # Look up size name in metadata.
+  return sizes.array_sizes[struct
