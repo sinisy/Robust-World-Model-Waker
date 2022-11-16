@@ -356,3 +356,18 @@ class RegularNamedAxis(Axis):
     elif isinstance(key_item, (list, np.ndarray)):
       # Cast lists to numpy arrays.
       key_item = np.array(key_item, copy=False)
+      original_shape = key_item.shape
+
+      # We assume that either all or none of the items in the array are strings
+      # representing names. If there is a mix, we will let NumPy throw an error
+      # when trying to index with the returned item.
+      if isinstance(key_item.flat[0], str):
+        key_item = np.array([self._names_to_offsets[util.to_native_string(k)]
+                             for k in key_item.flat])
+        # Ensure the output shape is the same as that of the input.
+        key_item.shape = original_shape
+
+    return key_item
+
+  @property
+  def names(self):
