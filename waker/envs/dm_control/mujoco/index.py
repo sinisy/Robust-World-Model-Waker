@@ -320,4 +320,25 @@ class Axis(metaclass=abc.ABCMeta):
 
   @abc.abstractmethod
   def convert_key_item(self, key_item):
-    
+    """Converts a (possibly named) indexing expression to a numpy index."""
+
+
+class UnnamedAxis(Axis):
+  """An object representing an axis where the elements are not named."""
+
+  def convert_key_item(self, key_item):
+    """Validate the indexing expression and return it unmodified."""
+    _validate_key_item(key_item)
+    return key_item
+
+
+class RegularNamedAxis(Axis):
+  """Represents an axis where each named element has a fixed size of 1."""
+
+  def __init__(self, names):
+    """Initializes a new `RegularNamedAxis` instance.
+
+    Args:
+      names: A list or array of element names.
+    """
+    self._names
