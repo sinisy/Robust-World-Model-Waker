@@ -341,4 +341,18 @@ class RegularNamedAxis(Axis):
     Args:
       names: A list or array of element names.
     """
-    self._names
+    self._names = names
+    self._names_to_offsets = {name: offset
+                              for offset, name in enumerate(names) if name}
+
+  def convert_key_item(self, key_item):
+    """Converts a named indexing expression to a numpy-friendly index."""
+
+    _validate_key_item(key_item)
+
+    if isinstance(key_item, str):
+      key_item = self._names_to_offsets[util.to_native_string(key_item)]
+
+    elif isinstance(key_item, (list, np.ndarray)):
+      # Cast lists to numpy arrays.
+      key_item = np.array(key_item, copy=False)
