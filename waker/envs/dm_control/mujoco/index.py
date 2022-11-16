@@ -300,4 +300,24 @@ def _is_name_pointer(field_name):
 
 def _get_size_name(field_name, struct_name='mjmodel'):
   # Look up size name in metadata.
-  return sizes.array_sizes[struct
+  return sizes.array_sizes[struct_name][field_name][0]
+
+
+def _validate_key_item(key_item):
+  if isinstance(key_item, (list, np.ndarray)):
+    for sub in key_item:
+      _validate_key_item(sub)  # Recurse into nested arrays and lists.
+  elif key_item is Ellipsis:
+    raise IndexError('Ellipsis indexing not supported.')
+  elif key_item is None:
+    raise IndexError('None indexing not supported.')
+  elif key_item in (b'', u''):
+    raise IndexError('Empty strings are not allowed.')
+
+
+class Axis(metaclass=abc.ABCMeta):
+  """Handles the conversion of named indexing expressions into numpy indices."""
+
+  @abc.abstractmethod
+  def convert_key_item(self, key_item):
+    
