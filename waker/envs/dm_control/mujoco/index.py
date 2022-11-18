@@ -406,4 +406,18 @@ class RaggedNamedAxis(Axis):
     self._names_to_indices = names_to_indices
 
   def convert_key_item(self, key_item):
-    """Converts
+    """Converts a named indexing expression to a numpy-friendly index."""
+
+    _validate_key_item(key_item)
+
+    if isinstance(key_item, str):
+      key_item = self._names_to_slices[util.to_native_string(key_item)]
+
+    elif isinstance(key_item, (list, np.ndarray)):
+      # We assume that either all or none of the items in the sequence are
+      # strings representing names. If there is a mix, we will let NumPy throw
+      # an error when trying to index with the returned key.
+      if isinstance(key_item[0], str):
+        new_key = []
+        for k in key_item:
+          idx = self._
