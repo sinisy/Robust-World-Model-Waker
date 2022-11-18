@@ -387,4 +387,23 @@ class RaggedNamedAxis(Axis):
       singleton: Whether to reduce singleton slices to scalars.
     """
     names_to_slices = {}
-    names_to_indices = 
+    names_to_indices = {}
+
+    offset = 0
+    for name, size in zip(element_names, element_sizes):
+      # Don't add unnamed elements to the dicts.
+      if name:
+        if size == 1 and singleton:
+          names_to_slices[name] = offset
+        else:
+          names_to_slices[name] = slice(offset, offset + size)
+        names_to_indices[name] = range(offset, offset + size)
+      offset += size
+
+    self._names = element_names
+    self._sizes = element_sizes
+    self._names_to_slices = names_to_slices
+    self._names_to_indices = names_to_indices
+
+  def convert_key_item(self, key_item):
+    """Converts
