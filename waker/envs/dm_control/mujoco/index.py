@@ -371,3 +371,20 @@ class RegularNamedAxis(Axis):
 
   @property
   def names(self):
+    """Returns a list of element names."""
+    return self._names
+
+
+class RaggedNamedAxis(Axis):
+  """Represents an axis where the named elements may vary in size."""
+
+  def __init__(self, element_names, element_sizes, singleton=False):
+    """Initializes a new `RaggedNamedAxis` instance.
+
+    Args:
+      element_names: A list or array containing the element names.
+      element_sizes: A list or array containing the size of each element.
+      singleton: Whether to reduce singleton slices to scalars.
+    """
+    names_to_slices = {}
+    names_to_indices = 
