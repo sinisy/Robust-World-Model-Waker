@@ -420,4 +420,26 @@ class RaggedNamedAxis(Axis):
       if isinstance(key_item[0], str):
         new_key = []
         for k in key_item:
-          idx = self._
+          idx = self._names_to_indices[util.to_native_string(k)]
+          if isinstance(idx, int):
+            new_key.append(idx)
+          else:
+            new_key.extend(idx)
+        key_item = new_key
+
+    return key_item
+
+  @property
+  def names(self):
+    """Returns a list of element names."""
+    return self._names
+
+
+Axes = collections.namedtuple('Axes', ['row', 'col'])
+Axes.__new__.__defaults__ = (None,)  # Default value for optional 'col' field
+
+
+class FieldIndexer:
+  """An array-like object providing named access to a field in a MuJoCo struct.
+
+  FieldIndexers expose the same attributes and methods as an `
