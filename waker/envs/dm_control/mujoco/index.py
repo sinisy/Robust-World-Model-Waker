@@ -476,4 +476,22 @@ class FieldIndexer:
   def _convert_key(self, key):
     """Convert a (possibly named) indexing expression to a valid numpy index."""
     return_tuple = isinstance(key, tuple)
-    if not return_tu
+    if not return_tuple:
+      key = (key,)
+    if len(key) > self._field.ndim:
+      raise IndexError('Index tuple has {} elements, but array has only {} '
+                       'dimensions.'.format(len(key), self._field.ndim))
+    new_key = tuple(axis.convert_key_item(key_item)
+                    for axis, key_item in zip(self._axes, key))
+    if not return_tuple:
+      new_key = new_key[0]
+    return new_key
+
+  def __getitem__(self, key):
+    """Converts the key to a numeric index and returns the indexed array.
+
+    Args:
+      key: Indexing expression.
+
+    Raises:
+      In
