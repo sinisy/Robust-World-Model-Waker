@@ -513,4 +513,20 @@ class FieldIndexer:
       IndexError: If an indexing tuple has too many elements, or if it contains
         `Ellipsis`, `None`, or an empty string.
     """
-    self._field[self._convert_key(key)
+    self._field[self._convert_key(key)] = value
+
+  @property
+  def axes(self):
+    """A namedtuple containing the row and column indexers for this field."""
+    return self._axes
+
+  def __repr__(self):
+    """Returns a pretty string representation of the `FieldIndexer`."""
+
+    def get_name_arr_and_len(dim_idx):
+      """Returns a string array of element names and the max name length."""
+      axis = self._axes[dim_idx]
+      size = self._field.shape[dim_idx]
+      try:
+        name_len = max(len(name) for name in axis.names)
+        name_arr = np.zeros(size, dtype='S{}'.format(name_len
