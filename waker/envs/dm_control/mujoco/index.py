@@ -529,4 +529,20 @@ class FieldIndexer:
       size = self._field.shape[dim_idx]
       try:
         name_len = max(len(name) for name in axis.names)
-        name_arr = np.zeros(size, dtype='S{}'.format(name_len
+        name_arr = np.zeros(size, dtype='S{}'.format(name_len))
+        for name in axis.names:
+          if name:
+            # Use the `Axis` object to convert the name into a numpy index, then
+            # use this index to write into name_arr.
+            name_arr[axis.convert_key_item(name)] = name
+      except AttributeError:
+        name_arr = np.zeros(size, dtype='S0')  # An array of zero-length strings
+        name_len = 0
+      return name_arr, name_len
+
+    row_name_arr, row_name_len = get_name_arr_and_len(0)
+    if self._field.ndim > 1:
+      col_name_arr, col_name_len = get_name_arr_and_len(1)
+    else:
+      col_name_arr, col_name_len = np.zeros(1, dtype='S0'), 0
+
