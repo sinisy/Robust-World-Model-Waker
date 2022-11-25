@@ -494,4 +494,23 @@ class FieldIndexer:
       key: Indexing expression.
 
     Raises:
-      In
+      IndexError: If an indexing tuple has too many elements, or if it contains
+        `Ellipsis`, `None`, or an empty string.
+
+    Returns:
+      The indexed array.
+    """
+    return self._field[self._convert_key(key)]
+
+  def __setitem__(self, key, value):
+    """Converts the key and assigns to the indexed array.
+
+    Args:
+      key: Indexing expression.
+      value: Value to assign.
+
+    Raises:
+      IndexError: If an indexing tuple has too many elements, or if it contains
+        `Ellipsis`, `None`, or an empty string.
+    """
+    self._field[self._convert_key(key)
