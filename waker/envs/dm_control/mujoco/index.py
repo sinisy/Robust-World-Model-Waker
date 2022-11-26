@@ -546,3 +546,18 @@ class FieldIndexer:
     else:
       col_name_arr, col_name_len = np.zeros(1, dtype='S0'), 0
 
+    idx_len = int(np.log10(max(self._field.shape[0], 1))) + 1
+
+    cls_template = '{class_name:}({field_name:}):'
+    col_template = '{padding:}{col_names:}'
+    row_template = '{idx:{idx_len:}} {row_name:>{row_name_len:}} {row_vals:}'
+
+    lines = []
+
+    # Write the class name and field name.
+    lines.append(cls_template.format(class_name=self.__class__.__name__,
+                                     field_name=self._field_name))
+
+    # Write a header line containing the column names (if there are any).
+    if col_name_len:
+      col_width = max(col_na
