@@ -609,4 +609,24 @@ def struct_indexer(struct, struct_name, size_to_axis_indexer):
     method.
 
   Raises:
-    ValueError: If `struct_n
+    ValueError: If `struct_name` is not recognized.
+  """
+  struct_name = struct_name.lower()
+  if struct_name not in sizes.array_sizes:
+    raise ValueError('Unrecognized struct name ' + struct_name)
+
+  array_sizes = sizes.array_sizes[struct_name]
+
+  # Used to create the namedtuple.
+  field_names = []
+  field_indexers = {}
+
+  for field_name in array_sizes:
+
+    # Skip over structured arrays and fields that have sizes but aren't numpy
+    # arrays, such as text fields and contacts (b/34805932).
+    attr = getattr(struct, field_name)
+    if not isinstance(attr, np.ndarray) or attr.dtype.fields:
+      continue
+
+    size_n
