@@ -575,4 +575,22 @@ class FieldIndexer:
     else:
       for idx, row in enumerate(self._field):
         row_vals = np.array2string(
-            np.atlea
+            np.atleast_1d(row),
+            suppress_small=True,
+            formatter={'float_kind': '{: < 9.3g}'.format})
+        lines.append(row_template.format(
+            idx=idx,
+            idx_len=idx_len,
+            row_name=util.to_native_string(row_name_arr[idx]),
+            row_name_len=row_name_len,
+            row_vals=row_vals))
+    return '\n'.join(lines)
+
+
+def struct_indexer(struct, struct_name, size_to_axis_indexer):
+  """Returns an object with a `FieldIndexer` attribute for each dynamic field.
+
+  Usage example
+
+  ```python
+  named_data = str
