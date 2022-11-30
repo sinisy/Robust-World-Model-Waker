@@ -560,4 +560,19 @@ class FieldIndexer:
 
     # Write a header line containing the column names (if there are any).
     if col_name_len:
-      col_width = max(col_na
+      col_width = max(col_name_len, 9) + 1
+      extra_indent = 4
+      padding = ' ' * (idx_len + row_name_len + extra_indent)
+      col_names = ''.join(
+          '{name:<{width:}}'
+          .format(name=util.to_native_string(name), width=col_width)
+          for name in col_name_arr)
+      lines.append(col_template.format(padding=padding, col_names=col_names))
+
+    # Write the row names (if there are any) and the formatted array values.
+    if not self._field.shape[0]:
+      lines.append('(empty)')
+    else:
+      for idx, row in enumerate(self._field):
+        row_vals = np.array2string(
+            np.atlea
