@@ -629,4 +629,19 @@ def struct_indexer(struct, struct_name, size_to_axis_indexer):
     if not isinstance(attr, np.ndarray) or attr.dtype.fields:
       continue
 
-    size_n
+    size_names = sizes.array_sizes[struct_name][field_name]
+
+    # Here we override the size name in order to enable named column indexing
+    # for certain fields, e.g. 3 becomes "xyz" for field name "xpos".
+    for new_col_size, field_set in _COLUMN_ID_TO_FIELDS.items():
+      if field_name in field_set:
+        size_names = (size_names[0], new_col_size)
+        break
+
+    axis_indexers = []
+    for size_name in size_names:
+      axis_indexers.append(size_to_axis_indexer[size_name])
+
+    field_indexers[field_name] = FieldIndexer(
+        parent_struct=struct,
+        field_name=field_n
