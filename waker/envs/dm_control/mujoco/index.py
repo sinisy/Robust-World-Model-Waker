@@ -644,4 +644,24 @@ def struct_indexer(struct, struct_name, size_to_axis_indexer):
 
     field_indexers[field_name] = FieldIndexer(
         parent_struct=struct,
-        field_name=field_n
+        field_name=field_name,
+        axis_indexers=axis_indexers)
+
+    field_names.append(field_name)
+
+  return make_struct_indexer(field_indexers)
+
+
+def make_struct_indexer(field_indexers):
+  """Returns an immutable container exposing named indexers as attributes."""
+
+  class StructIndexer:
+    __slots__ = ()
+
+    def _asdict(self):
+      return field_indexers.copy()
+
+  for name, indexer in field_indexers.items():
+    setattr(StructIndexer, name, indexer)
+
+  return StructIndexer()
