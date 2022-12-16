@@ -1,0 +1,4 @@
+<mujoco model='jaco'>
+  <compiler coordinate='local' angle='radian' eulerseq='yxz'/>
+
+  

@@ -11,4 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or  implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# =======================================================
+# ============================================================================
+
+"""Assets used for testing the MuJoCo bindings."""
+
+import os
+
+from dm_control.utils import io as resources
+
+_ASSETS_DIR = os.path.dirname(__file__)
+
+
+def get_contents(filename):
+  """Returns the contents of an asset as a string."""
+  return resources.GetResource(os.path.join(_ASSETS_DIR, filename), mode='rb')
+
+
+def get_path(filename):
+  """Returns the path to an asset."""
+  return resources.GetResourceFilename(os.path.join(_ASSETS_DIR, filename))
