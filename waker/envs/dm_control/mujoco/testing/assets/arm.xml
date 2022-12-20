@@ -21,4 +21,12 @@
       <geom type='box' pos='0.065 -0.022 0' size='0.02 .005 .011' rgba='1 0 0 1'
             quat='1 0 0 -0.235' condim='4' />
       <site type='ellipsoid' pos='0.065 -0.022 0' size='0.02 .005 .011'
-        
+            quat='1 0 0 -0.235'/>
+    </default>
+  </default>
+
+  <worldbody>
+    <geom name='ground' type='plane' pos='0 0 0.06' size='1 1 1' rgba='0.78 0.93 0.92 1.0' margin='0.1' gap='0.1' />
+    <body name='b_base' pos='0 0 0.005'>
+      <inertial pos='-0.000132925 -0.000516418 0.0820911' quat='0.6951 -0.00714556 0.00738537 0.71884' mass='0.00718278' diaginertia='0.00157301 0.00157269 0.00058831' />
+      <geom name='base' rgba='0 0.4470 0.7410 1' type='capsule' size="0.0350512 0.0555543" pos="-0.000132925 -0.000516418 0.0820911" quat="0.6951 -0.00714564 0.00738544 0.71884" />
