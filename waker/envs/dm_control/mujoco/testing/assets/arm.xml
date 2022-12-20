@@ -13,4 +13,12 @@
     <joint type='hinge' armature='0' damping='0'
       solimpfriction='.95 .95 0' solreffriction='.02 1' solimplimit='0 .99 .01' solreflimit='.02 1'/>
     <default class='finger'>
-      <joint fricti
+      <joint frictionloss='0.1' armature='.1' axis='0 0 1' limited='true' range='-0.15 1.2' damping='.1'/>
+      <velocity kv='0.5' ctrlrange='-1 1' gear='1' forcerange='-1.5 1.5'/>
+      <geom type='capsule' size="0.0108231 0.0145116" pos="0.0190913 -0.0112192 1.10387e-06" quat="0.475811 -0.475815 0.523071 -0.523068"/>
+    </default>
+    <default class='fingertip'>
+      <geom type='box' pos='0.065 -0.022 0' size='0.02 .005 .011' rgba='1 0 0 1'
+            quat='1 0 0 -0.235' condim='4' />
+      <site type='ellipsoid' pos='0.065 -0.022 0' size='0.02 .005 .011'
+        
