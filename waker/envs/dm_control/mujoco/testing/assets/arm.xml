@@ -57,4 +57,10 @@
                   <joint name='joint_6' axis='0 0 -1' range='-6.28319 6.28319'  limited='false'/>
                   <geom name='link_6' rgba='0.6350 0.0780 0.1840 1' type='capsule' size="0.0368731 0.0322296" pos="0.00628384 -2.92087e-05 -0.0608681" quat="0.708562 -0.0338601 -0.0358744 0.703923"/>
                   <!-- optional collision geom to be used if issues arise with the mesh
-                    <geom type='ellipsoid' rgba='0.6350 0.0780 0.1840 1' size='.035 
+                    <geom type='ellipsoid' rgba='0.6350 0.0780 0.1840 1' size='.035 .025 .01' pos='.005 0 -.117' group='1'/> -->
+                  <body name='b_finger_1' childclass='finger' pos='-0.029 .003 -0.1145' quat='-0.414818 -0.329751 -0.663854 0.52772'>
+                    <inertial pos='0.0485761 -0.000715511 0' quat='0.507589 0.507348 0.492543 0.492294' mass='0.000379077' diaginertia='4.00708e-005 4.00527e-005 2.156e-006' />
+                    <joint name='joint_finger_1'/>
+                    <geom name='finger_knuckle_1' rgba='0 0.4470 0.7410 1'/>
+                    <geom class='fingertip' name='finger_tip_1' rgba='0 0.4470 0.7410 1'/>
+                    <site clas
