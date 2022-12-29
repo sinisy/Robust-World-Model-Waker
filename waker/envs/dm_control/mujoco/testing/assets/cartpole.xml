@@ -1,0 +1,13 @@
+<!-- Cartpole Model
+
+State-Space (name/joint/parameter):
+
+- cart      slider      position (m)
+- pole      hinge       angle (rad)
+- cart      slider      velocity (m/s)
+- pole      hinge       angular velocity (rad/s)
+
+Actuators (name/actuator/parameter):
+
+- cart      motor       force x (N)
+-->
