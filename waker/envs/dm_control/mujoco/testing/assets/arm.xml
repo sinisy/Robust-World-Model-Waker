@@ -69,4 +69,11 @@
                     <inertial pos='0.0485761 -0.000715511 0' quat='0.507589 0.507348 0.492543 0.492294' mass='0.000379077' diaginertia='4.00708e-005 4.00527e-005 2.156e-006' />
                     <joint name='joint_finger_2'/>
                     <geom name='finger_knuckle_2' rgba='0.9290 0.6940 0.1250 1'/>
-                    <geom class='fingertip' name='f
+                    <geom class='fingertip' name='finger_tip_2' rgba='0.9290 0.6940 0.1250 1'/>
+                    <site class='fingertip' name='fingertip2'/>
+                  </body>
+                  <body name='b_finger_3' childclass='finger' pos='0.0295 -0.0216 -0.1145' quat='0.625248 -0.567602 0.434845 0.312735'>
+                    <inertial pos='0.0485761 -0.000715511 0' quat='0.507589 0.507348 0.492543 0.492294' mass='0.000379077' diaginertia='4.00708e-005 4.00527e-005 2.156e-006' />
+                    <joint name='joint_finger_3'/>
+                    <geom name='finger_knuckle_3' rgba='0.8500 0.3250 0.0980 1'/>
+     
