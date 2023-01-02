@@ -27,4 +27,16 @@ Actuators (name/actuator/parameter):
 
   <worldbody>
     <camera name='fixed' pos='0 -2.5 0' quat='0.707 0.707 0 0'/>
-    <geom name='floor' pos='0 0 -1' size
+    <geom name='floor' pos='0 0 -1' size='4 4 4' type='plane' />
+    <geom name='rail1' type='capsule' pos='0 .07 0' quat='0.707 0 0.707 0'
+          size='0.02 1.2' />
+    <geom name='rail2' type='capsule' pos='0 -.07 0' quat='0.707 0 0.707 0'
+          size='0.02 1.2' />
+    <body name='cart' pos='0 0 0'>
+      <camera pos='0 -2.5 0' quat='0.707 0.707 0 0' />
+      <joint name='slider' type='slide' limited='true' pos='0 0 0'
+               axis='1 0 0' range='-1 1' />
+      <geom name='cart' type='box' pos='0 0 0'
+              size='0.2 0.1 0.05' rgba='0.7 0.7 0 1' />
+      <site name='cart sensor' type='box' pos='0 0 0'
+              size='
