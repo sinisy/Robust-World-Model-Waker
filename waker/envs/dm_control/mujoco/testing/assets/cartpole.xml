@@ -54,4 +54,22 @@ Actuators (name/actuator/parameter):
     <body name='mocap1' pos='1 0 0.5' mocap='true'>
       <geom name='mocap_cube' type='box' size='0.05 0.05 0.05' rgba='1 0 0 0.5'/>
     </body>
-    <body name='mocap2' pos='-1
+    <body name='mocap2' pos='-1 0 0.5' mocap='true'>
+      <geom name='mocap_sphere' type='sphere' size='0.05' rgba='0 1 0 0.5'/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name='slide' joint='slider' gear='50' ctrllimited='true' ctrlrange='-1 1' />
+  </actuator>
+
+  <sensor>
+    <accelerometer name="accelerometer" site="cart sensor"/>
+    <touch name="collision" site="cart sensor"/>
+  </sensor>
+
+  <keyframe>
+    <key name="hanging_down" qpos="0 1.57"/>
+  </keyframe>
+
+</mujoco>

@@ -1,0 +1,7 @@
+<!-- Cartpole Model
+
+State-Space (name/joint/parameter):
+
+- cart      slider      position (m)
+- pole      hinge       angle (rad)
+- cart      slider     
