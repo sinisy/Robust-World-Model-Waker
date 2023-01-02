@@ -4,4 +4,27 @@ State-Space (name/joint/parameter):
 
 - cart      slider      position (m)
 - pole      hinge       angle (rad)
-- cart      slider     
+- cart      slider      velocity (m/s)
+- pole      hinge       angular velocity (rad/s)
+
+Actuators (name/actuator/parameter):
+
+- cart      motor       force x (N)
+-->
+<mujoco model='test_cartpole'>
+  <compiler inertiafromgeom='true' coordinate='local'/>
+
+  <custom>
+    <numeric name="control_timestep" data="0.04" />
+  </custom>
+
+  <option timestep='0.01'/>
+
+  <default>
+    <joint damping='0.05' solreflimit='.08 1'/>
+    <geom contype='0' friction='1 0.1 0.1'/>
+  </default>
+
+  <worldbody>
+    <camera name='fixed' pos='0 -2.5 0' quat='0.707 0.707 0 0'/>
+    <geom name='floor' pos='0 0 -1' size
