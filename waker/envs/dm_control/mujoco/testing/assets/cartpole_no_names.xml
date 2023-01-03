@@ -55,4 +55,8 @@ Actuators (name/actuator/parameter):
   </actuator>
 
   <sensor>
-    <accelerom
+    <accelerometer name="accelerometer" site="cart sensor"/>
+    <touch name="collision" site="cart sensor"/>
+  </sensor>
+
+</mujoco>
