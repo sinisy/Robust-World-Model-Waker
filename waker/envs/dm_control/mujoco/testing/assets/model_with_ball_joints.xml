@@ -10,4 +10,12 @@
       <body pos='0 0 0.1'>
         <geom fromto='0 0 0 0 0.1 0.1'/>
         <joint name='joint_1'/>
-        <body pos
+        <body pos='0 0.1 0.1'>
+          <geom fromto='0 0 0 0 0.1 0.0'/>
+          <joint name='joint_2'/>
+          <site name='gripsite' pos='0 0.1 0'/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>
