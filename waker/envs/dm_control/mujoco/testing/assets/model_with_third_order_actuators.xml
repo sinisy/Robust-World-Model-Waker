@@ -9,4 +9,6 @@
     <motor name="motor" joint="slide_joint"/> <!-- Second-order -->
     <cylinder name="cylinder" joint="slide_joint"/> <!-- Third-order -->
     <velocity name="velocity" joint="slide_joint"/> <!-- Second-order -->
-    <ge
+    <general name="general" joint="slide_joint" dyntype="integrator" biastype="affine" dynprm="1 0 0"/> <!-- Third-order -->
+  </actuator>
+</mujoco>
