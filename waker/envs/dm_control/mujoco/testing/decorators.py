@@ -8,4 +8,22 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIE
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or  implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+
+"""Decorators used in MuJoCo tests."""
+
+import functools
+import threading
+
+
+def run_threaded(num_threads=4, calls_per_thread=10):
+  """A decorator that executes the same test repeatedly in multiple threads.
+
+  Note: `setUp` and `tearDown` methods will only be called once from the main
+        thread, so all thread-local setup must be done within the test method.
+
+  Args:
+    num_threads: N
