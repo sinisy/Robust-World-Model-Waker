@@ -26,4 +26,19 @@ def run_threaded(num_threads=4, calls_per_thread=10):
         thread, so all thread-local setup must be done within the test method.
 
   Args:
-    num_threads: N
+    num_threads: Number of concurrent threads to spawn. If None then the wrapped
+      method will be executed in the main thread instead.
+    calls_per_thread: Number of times each thread should call the test method.
+  Returns:
+    Decorated test method.
+  """
+  def decorator(test_method):
+    """Decorator around the test method."""
+    @functools.wraps(test_method)  # Needed for `named_parameters` to work.
+    def decorated_method(self, *args, **kwargs):
+      """Actual method this factory will return."""
+      exceptions = []
+      def worker():
+        try:
+          for _ in range(calls_per_thread):
+            test_
