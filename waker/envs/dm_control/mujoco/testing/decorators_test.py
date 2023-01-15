@@ -10,3 +10,25 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or  implied.
 # See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+
+"""Tests of the decorators module."""
+
+from absl.testing import absltest
+from dm_control.mujoco.testing import decorators
+import mock
+
+
+class RunThreadedTest(absltest.TestCase):
+
+  @mock.patch(decorators.__name__ + ".threading")
+  def test_number_of_threads(self, mock_threading):
+    num_threads = 5
+
+    mock_threads = [mock.MagicMock() for _ in range(num_threads)]
+    for thread in mock_threads:
+      thread.start = mock.MagicMock()
+      thread.join = mock.MagicMock()
+
+    mock_
