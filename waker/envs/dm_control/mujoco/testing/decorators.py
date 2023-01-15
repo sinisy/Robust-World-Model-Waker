@@ -57,4 +57,5 @@ def run_threaded(num_threads=4, calls_per_thread=10):
         worker()
       for exc in exceptions:
         raise exc
-    ret
+    return decorated_method
+  return decorator
