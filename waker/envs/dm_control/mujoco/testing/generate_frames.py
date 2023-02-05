@@ -19,3 +19,10 @@ from absl import app
 from dm_control.mujoco.testing import image_utils
 
 
+def main(argv):
+  del argv  # Unused.
+  for sequence in image_utils.SEQUENCES.values():
+    sequence.save()
+
+if __name__ == '__main__':
+  app.run(main)
