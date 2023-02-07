@@ -50,4 +50,22 @@ _SUBDIR_TEMPLATE = (
 
 
 def _get_subdir(name, seed, backend_string, camera_spec):
-  if camera_spec.render
+  if camera_spec.render_flag_overrides:
+    overrides = ('{}_{}'.format(k, v) for k, v in
+                 sorted(camera_spec.render_flag_overrides.items()))
+    render_flag_overrides_string = '_' + '_'.join(overrides)
+  else:
+    render_flag_overrides_string = ''
+  return _SUBDIR_TEMPLATE.format(
+      name=name,
+      seed=seed,
+      camera_id=camera_spec.camera_id,
+      width=camera_spec.width,
+      height=camera_spec.height,
+      backend_string=backend_string,
+      render_flag_overrides_string=render_flag_overrides_string,
+  )
+
+
+class _FrameSequence:
+  """A sequence of 
