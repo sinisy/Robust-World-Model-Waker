@@ -31,4 +31,23 @@ BACKEND_STRING = 'hardware' if _render.USING_GPU else 'software'
 
 
 class ImagesNotCloseError(AssertionError):
-  """
+  """Exception raised when two images are not sufficiently close."""
+
+  def __init__(self, message, expected, actual):
+    super().__init__(message)
+    self.expected = expected
+    self.actual = actual
+
+
+_CameraSpec = collections.namedtuple(
+    '_CameraSpec', ['height', 'width', 'camera_id', 'render_flag_overrides'])
+
+
+_SUBDIR_TEMPLATE = (
+    '{name}_seed_{seed}_camera_{camera_id}_{width}x{height}_{backend_string}'
+    '{render_flag_overrides_string}'
+)
+
+
+def _get_subdir(name, seed, backend_string, camera_spec):
+  if camera_spec.render
