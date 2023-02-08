@@ -105,4 +105,17 @@ class _FrameSequence:
     return len(self._camera_specs)
 
   def iter_render(self):
-    """Returns
+    """Returns an iterator that yields newly rendered frames as numpy arrays."""
+    random_state = np.random.RandomState(self._seed)
+    physics = mujoco.Physics.from_xml_string(self._xml_string)
+    action_spec = mujoco.action_spec(physics)
+    for _ in range(self._num_frames):
+      for _ in range(self._steps_per_frame):
+        actions = random_state.uniform(action_spec.minimum, action_spec.maximum)
+        physics.set_control(actions)
+        physics.step()
+      for camera_spec in self._camera_specs:
+        yield physics.render(**camera_spec._asdict())
+
+  def iter_load(self):
+    """Returns an iterator that yields saved 
