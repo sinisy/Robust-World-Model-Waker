@@ -86,4 +86,23 @@ class _FrameSequence:
     Args:
       name: A string containing the name to be used for the sequence.
       xml_string: An MJCF XML string containing the model to be rendered.
-      camera_specs: A list of `_CameraSpec
+      camera_specs: A list of `_CameraSpec` instances specifying the cameras to
+        render on each frame.
+      num_frames: The number of frames to render.
+      steps_per_frame: The interval between frames, in simulation steps.
+      seed: Integer or None, used to initialize the random number generator for
+        generating actions.
+    """
+    self._name = name
+    self._xml_string = xml_string
+    self._camera_specs = camera_specs
+    self._num_frames = num_frames
+    self._steps_per_frame = steps_per_frame
+    self._seed = seed
+
+  @property
+  def num_cameras(self):
+    return len(self._camera_specs)
+
+  def iter_render(self):
+    """Returns
