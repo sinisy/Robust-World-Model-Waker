@@ -118,4 +118,15 @@ class _FrameSequence:
         yield physics.render(**camera_spec._asdict())
 
   def iter_load(self):
-    """Returns an iterator that yields saved 
+    """Returns an iterator that yields saved frames as numpy arrays."""
+    for directory, filename in self._iter_paths():
+      path = os.path.join(directory, filename)
+      yield _load_pixels(path)
+
+  def save(self):
+    """Saves a new set of golden output frames to disk."""
+    for pixels, (relative_to_assets, filename) in zip(self.iter_render(),
+                                                      self._iter_paths()):
+      full_directory_path = os.path.join(self._ASSETS_DIR, relative_to_assets)
+      if not os.path.exists(full_directory_path):
+        os.makedirs(full_directory_path
