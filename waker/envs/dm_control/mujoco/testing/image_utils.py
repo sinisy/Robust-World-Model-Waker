@@ -68,4 +68,22 @@ def _get_subdir(name, seed, backend_string, camera_spec):
 
 
 class _FrameSequence:
-  """A sequence of 
+  """A sequence of pre-rendered frames used in integration tests."""
+
+  _ASSETS_DIR = 'assets'
+  _FRAMES_DIR = 'frames'
+  _FILENAME_TEMPLATE = 'frame_{frame_num:03}.png'
+
+  def __init__(self,
+               name,
+               xml_string,
+               camera_specs,
+               num_frames=20,
+               steps_per_frame=10,
+               seed=0):
+    """Initializes a new `_FrameSequence`.
+
+    Args:
+      name: A string containing the name to be used for the sequence.
+      xml_string: An MJCF XML string containing the model to be rendered.
+      camera_specs: A list of `_CameraSpec
