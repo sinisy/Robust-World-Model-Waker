@@ -166,4 +166,33 @@ humanoid = _FrameSequence(
             width=240,
             height=320,
             camera_id=0,
-         
+            render_flag_overrides={
+                'shadow': False,
+                'reflection': False,
+            }),
+        _CameraSpec(
+            width=64,
+            height=64,
+            camera_id='head_track',
+            render_flag_overrides={}),
+    ))
+
+
+SEQUENCES = {
+    'cartpole': cartpole,
+    'humanoid': humanoid,
+}
+
+
+def _save_pixels(pixels, path):
+  image = Image.fromarray(pixels)
+  image.save(path)
+
+
+def _load_pixels(path):
+  image_bytes = assets.get_contents(path)
+  image = Image.open(io.BytesIO(image_bytes))
+  return np.array(image)
+
+
+def comput
