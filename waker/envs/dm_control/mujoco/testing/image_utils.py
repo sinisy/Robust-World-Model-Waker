@@ -144,4 +144,26 @@ class _FrameSequence:
             backend_string=BACKEND_STRING,
             camera_spec=camera_spec)
         directory = os.path.join(self._FRAMES_DIR, subdir_name)
-  
+        yield directory, filename
+
+
+cartpole = _FrameSequence(
+    name='cartpole',
+    xml_string=assets.get_contents('cartpole.xml'),
+    camera_specs=(
+        _CameraSpec(
+            width=320, height=240, camera_id=0, render_flag_overrides={}),
+    ),
+    steps_per_frame=5)
+
+humanoid = _FrameSequence(
+    name='humanoid',
+    xml_string=assets.get_contents('humanoid.xml'),
+    camera_specs=(
+        _CameraSpec(
+            width=240, height=320, camera_id=0, render_flag_overrides={}),
+        _CameraSpec(
+            width=240,
+            height=320,
+            camera_id=0,
+         
