@@ -129,4 +129,19 @@ class _FrameSequence:
                                                       self._iter_paths()):
       full_directory_path = os.path.join(self._ASSETS_DIR, relative_to_assets)
       if not os.path.exists(full_directory_path):
-        os.makedirs(full_directory_path
+        os.makedirs(full_directory_path)
+      path = os.path.join(full_directory_path, filename)
+      _save_pixels(pixels, path)
+
+  def _iter_paths(self):
+    """Returns an iterator over paths to the reference images."""
+    for frame_num in range(self._num_frames):
+      filename = self._FILENAME_TEMPLATE.format(frame_num=frame_num)
+      for camera_spec in self._camera_specs:
+        subdir_name = _get_subdir(
+            name=self._name,
+            seed=self._seed,
+            backend_string=BACKEND_STRING,
+            camera_spec=camera_spec)
+        directory = os.path.join(self._FRAMES_DIR, subdir_name)
+  
