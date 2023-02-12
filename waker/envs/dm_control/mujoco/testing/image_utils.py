@@ -195,4 +195,22 @@ def _load_pixels(path):
   return np.array(image)
 
 
-def comput
+def compute_rms(image1, image2):
+  """Computes the RMS difference between two images."""
+  abs_diff = np.abs(image1.astype(np.int16) - image2)
+  values, counts = np.unique(abs_diff, return_counts=True)
+  sum_of_squares = np.sum(counts * values.astype(np.int64) ** 2)
+  return np.sqrt(float(sum_of_squares) / abs_diff.size)
+
+
+def assert_images_close(expected, actual, tolerance=10.):
+  """Tests whether two images are almost equal.
+
+  Args:
+    expected: A numpy array, the expected image.
+    actual: A numpy array, the actual image.
+    tolerance: A float specifying the maximum allowable RMS error between the
+      expected and actual images.
+
+  Raises:
+    Imag
