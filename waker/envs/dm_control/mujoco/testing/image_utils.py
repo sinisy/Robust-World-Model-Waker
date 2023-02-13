@@ -231,4 +231,18 @@ def save_images_on_failure(output_dir):
     A decorator function.
   """
   def decorator(test_method):
-    """Decorator, saves debugging images if 
+    """Decorator, saves debugging images if `ImagesNotCloseError` is raised."""
+    method_name = test_method.__name__
+    @functools.wraps(test_method)
+    def decorated_method(*args, **kwargs):
+      """Call test method, save images if `ImagesNotCloseError` is raised."""
+      try:
+        test_method(*args, **kwargs)
+      except ImagesNotCloseError as e:
+        _, _, tb = sys.exc_info()
+        if not os.path.exists(output_dir):
+          os.makedirs(output_dir)
+        difference = e.actual.astype(np.double) - e.expected
+        difference = (0.5 * (difference + 255)).astype(np.uint8)
+        base_name = os.path.join(output_dir, method_name)
+        _sa
