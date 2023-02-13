@@ -213,4 +213,22 @@ def assert_images_close(expected, actual, tolerance=10.):
       expected and actual images.
 
   Raises:
-    Imag
+    ImagesNotCloseError: If the images are not sufficiently close.
+  """
+  rms = compute_rms(expected, actual)
+  if rms > tolerance:
+    message = 'RMS error exceeds tolerance ({} > {})'.format(rms, tolerance)
+    raise ImagesNotCloseError(message, expected=expected, actual=actual)
+
+
+def save_images_on_failure(output_dir):
+  """Decorator that saves debugging images if `ImagesNotCloseError` is raised.
+
+  Args:
+    output_dir: Path to the directory where the output images will be saved.
+
+  Returns:
+    A decorator function.
+  """
+  def decorator(test_method):
+    """Decorator, saves debugging images if 
