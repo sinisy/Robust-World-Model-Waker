@@ -245,4 +245,14 @@ def save_images_on_failure(output_dir):
         difference = e.actual.astype(np.double) - e.expected
         difference = (0.5 * (difference + 255)).astype(np.uint8)
         base_name = os.path.join(output_dir, method_name)
-        _sa
+        _save_pixels(e.expected, base_name + '-expected.png')
+        _save_pixels(e.actual, base_name + '-actual.png')
+        _save_pixels(difference, base_name + '-difference.png')
+        msg = ('{}. Debugging images saved to '
+               '{}-{{expected,actual,difference}}.png.'.format(e, base_name))
+        new_e = ImagesNotCloseError(msg, expected=e.expected, actual=e.actual)
+        # Reraise the exception with the original traceback.
+        raise new_e.with_traceback(tb)
+
+    return decorated_method
+  return decorator
