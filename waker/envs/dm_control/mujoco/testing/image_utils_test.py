@@ -13,4 +13,25 @@
 # limitations under the License.
 # ============================================================================
 
-"""Te
+"""Tests for image_utils."""
+
+import os
+
+from absl.testing import absltest
+from absl.testing import parameterized
+from dm_control.mujoco.testing import image_utils
+import mock
+import numpy as np
+from PIL import Image
+
+SEED = 0
+
+
+class ImageUtilsTest(parameterized.TestCase):
+
+  @parameterized.parameters(
+      dict(frame_index1=0, frame_index2=0, expected_rms=0.0),
+      dict(frame_index1=0, frame_index2=1, expected_rms=23.214),
+      dict(frame_index1=0, frame_index2=9, expected_rms=55.738))
+  def test_compute_rms(self, frame_index1, frame_index2, expected_rms):
+    # Force loading 
