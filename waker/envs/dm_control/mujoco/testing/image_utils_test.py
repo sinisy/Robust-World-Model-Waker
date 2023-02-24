@@ -34,4 +34,15 @@ class ImageUtilsTest(parameterized.TestCase):
       dict(frame_index1=0, frame_index2=1, expected_rms=23.214),
       dict(frame_index1=0, frame_index2=9, expected_rms=55.738))
   def test_compute_rms(self, frame_index1, frame_index2, expected_rms):
-    # Force loading 
+    # Force loading of the software rendering reference images regardless of the
+    # actual GL backend, since these should match the expected RMS values.
+    with mock.patch.object(image_utils, 'BACKEND_STRING', new='software'):
+      frames = list(image_utils.humanoid.iter_load())
+    camera_idx = 0
+    num_cameras = image_utils.humanoid.num_cameras
+    image1 = frames[camera_idx + frame_index1 * num_cameras]
+    image2 = frames[camera_idx + frame_index2 * num_cameras]
+    rms = image_utils.compute_rms(image1, image2)
+    self.assertAlmostEqual(rms, expected_rms, places=3)
+
+  def test_assert_images_cl
