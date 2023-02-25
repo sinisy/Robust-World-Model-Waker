@@ -45,4 +45,15 @@ class ImageUtilsTest(parameterized.TestCase):
     rms = image_utils.compute_rms(image1, image2)
     self.assertAlmostEqual(rms, expected_rms, places=3)
 
-  def test_assert_images_cl
+  def test_assert_images_close(self):
+    random_state = np.random.RandomState(SEED)
+    image1 = random_state.randint(0, 255, size=(64, 64, 3), dtype=np.uint8)
+    image2 = random_state.randint(0, 255, size=(64, 64, 3), dtype=np.uint8)
+    image_utils.assert_images_close(image1, image1, tolerance=0)
+    with self.assertRaisesRegex(  # pylint: disable=g-error-prone-assert-raises
+        image_utils.ImagesNotCloseError, 'RMS error exceeds tolerance'):
+      image_utils.assert_images_close(image1, image2)
+
+  def test_save_images_on_failure(self):
+    random_state = np.random.RandomState(SEED)
+    image1 = random_state.randint(
