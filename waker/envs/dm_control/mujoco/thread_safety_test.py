@@ -13,4 +13,22 @@
 # limitations under the License.
 # ============================================================================
 
-"""Tests to check wh
+"""Tests to check whether methods of `mujoco.Physics` are threadsafe."""
+
+import platform
+
+from absl.testing import absltest
+from dm_control import _render
+from dm_control.mujoco import engine
+from dm_control.mujoco.testing import assets
+from dm_control.mujoco.testing import decorators
+
+
+MODEL = assets.get_contents('cartpole.xml')
+NUM_STEPS = 10
+
+# Context creation with GLFW is not threadsafe.
+if _render.BACKEND == 'glfw':
+  # On Linux we are able to create a GLFW window in a single thread that is not
+  # the main thread.
+  # On Mac we are only allowed to create windows on the
