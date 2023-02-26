@@ -70,4 +70,17 @@ class ImageUtilsTest(parameterized.TestCase):
                                 '{}.*'.format(message)):
       func()
 
-    def 
+    def validate_saved_file(name, expected_contents):
+      path = os.path.join(output_dir, '{}-{}.png'.format('func', name))
+      self.assertTrue(os.path.isfile(path))
+      image = Image.open(path)
+      actual_contents = np.array(image)
+      np.testing.assert_array_equal(expected_contents, actual_contents)
+
+    validate_saved_file('expected', image1)
+    validate_saved_file('actual', image2)
+    validate_saved_file('difference', diff)
+
+
+if __name__ == '__main__':
+  absltest.main()
