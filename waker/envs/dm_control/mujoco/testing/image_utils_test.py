@@ -56,4 +56,18 @@ class ImageUtilsTest(parameterized.TestCase):
 
   def test_save_images_on_failure(self):
     random_state = np.random.RandomState(SEED)
-    image1 = random_state.randint(
+    image1 = random_state.randint(0, 255, size=(64, 64, 3), dtype=np.uint8)
+    image2 = random_state.randint(0, 255, size=(64, 64, 3), dtype=np.uint8)
+    diff = (0.5 * (image2.astype(np.int16) - image1 + 255)).astype(np.uint8)
+    message = 'exception message'
+    output_dir = absltest.get_default_test_tmpdir()
+
+    @image_utils.save_images_on_failure(output_dir=output_dir)
+    def func():
+      raise image_utils.ImagesNotCloseError(message, image1, image2)
+
+    with self.assertRaisesRegex(image_utils.ImagesNotCloseError,
+                                '{}.*'.format(message)):
+      func()
+
+    def 
