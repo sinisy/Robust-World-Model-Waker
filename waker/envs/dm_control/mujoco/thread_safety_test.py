@@ -31,4 +31,22 @@ NUM_STEPS = 10
 if _render.BACKEND == 'glfw':
   # On Linux we are able to create a GLFW window in a single thread that is not
   # the main thread.
-  # On Mac we are only allowed to create windows on the
+  # On Mac we are only allowed to create windows on the main thread, so we
+  # disable the `run_threaded` wrapper entirely.
+  NUM_THREADS = None if platform.system() == 'Darwin' else 1
+else:
+  NUM_THREADS = 4
+
+
+class ThreadSafetyTest(absltest.TestCase):
+
+  @decorators.run_threaded(num_threads=NUM_THREADS)
+  def test_load_physics_from_string(self):
+    engine.Physics.from_xml_string(MODEL)
+
+  @decorators.run_threaded(num_threads=NUM_THREADS)
+  def test_load_and_reload_physics_from_string(self):
+    physics = engine.Physics.from_xml_string(MODEL)
+    physics.reload_from_xml_string(MODEL)
+
+  @decorators.run_threaded(
