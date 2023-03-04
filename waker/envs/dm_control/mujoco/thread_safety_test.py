@@ -65,4 +65,22 @@ class ThreadSafetyTest(absltest.TestCase):
 
   @decorators.run_threaded(num_threads=NUM_THREADS)
   def test_load_and_step_multiple_physics_sequential(self):
-    physics1 = engine.Ph
+    physics1 = engine.Physics.from_xml_string(MODEL)
+    for _ in range(NUM_STEPS):
+      physics1.step()
+    del physics1
+    physics2 = engine.Physics.from_xml_string(MODEL)
+    for _ in range(NUM_STEPS):
+      physics2.step()
+
+  @decorators.run_threaded(num_threads=NUM_THREADS, calls_per_thread=5)
+  def test_load_physics_and_render(self):
+    physics = engine.Physics.from_xml_string(MODEL)
+
+    # Check that frames aren't repeated - make the cartpole move.
+    physics.set_control([1.0])
+
+    unique_frames = set()
+    for _ in range(NUM_STEPS):
+      physics.step()
+      frame = physics.render(width=32
