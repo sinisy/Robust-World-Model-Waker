@@ -100,4 +100,4 @@ class ThreadSafetyTest(absltest.TestCase):
 
 
 if __name__ == '__main__':
-  a
+  absltest.main()
