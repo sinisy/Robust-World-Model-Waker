@@ -49,4 +49,20 @@ class ThreadSafetyTest(absltest.TestCase):
     physics = engine.Physics.from_xml_string(MODEL)
     physics.reload_from_xml_string(MODEL)
 
-  @decorators.run_threaded(
+  @decorators.run_threaded(num_threads=NUM_THREADS)
+  def test_load_and_step_physics(self):
+    physics = engine.Physics.from_xml_string(MODEL)
+    for _ in range(NUM_STEPS):
+      physics.step()
+
+  @decorators.run_threaded(num_threads=NUM_THREADS)
+  def test_load_and_step_multiple_physics_parallel(self):
+    physics1 = engine.Physics.from_xml_string(MODEL)
+    physics2 = engine.Physics.from_xml_string(MODEL)
+    for _ in range(NUM_STEPS):
+      physics1.step()
+      physics2.step()
+
+  @decorators.run_threaded(num_threads=NUM_THREADS)
+  def test_load_and_step_multiple_physics_sequential(self):
+    physics1 = engine.Ph
