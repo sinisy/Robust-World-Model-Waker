@@ -83,4 +83,21 @@ class ThreadSafetyTest(absltest.TestCase):
     unique_frames = set()
     for _ in range(NUM_STEPS):
       physics.step()
-      frame = physics.render(width=32
+      frame = physics.render(width=320, height=240, camera_id=0)
+      unique_frames.add(frame.tobytes())
+
+    self.assertLen(unique_frames, NUM_STEPS)
+
+  @decorators.run_threaded(num_threads=NUM_THREADS, calls_per_thread=5)
+  def test_render_multiple_physics_instances_per_thread_parallel(self):
+    physics1 = engine.Physics.from_xml_string(MODEL)
+    physics2 = engine.Physics.from_xml_string(MODEL)
+    for _ in range(NUM_STEPS):
+      physics1.step()
+      physics1.render(width=320, height=240, camera_id=0)
+      physics2.step()
+      physics2.render(width=320, height=240, camera_id=0)
+
+
+if __name__ == '__main__':
+  a
