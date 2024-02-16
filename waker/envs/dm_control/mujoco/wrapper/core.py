@@ -591,3 +591,163 @@ class MjrContext:
     Args:
       model: An `MjModel` instance.
       gl_context: A `render.ContextBase` instance.
+      font_scale: Integer controlling the font size for text. Must be a value
+        in `mujoco.mjtFontScale`.
+
+    Raises:
+      ValueError: If `font_scale` is invalid.
+    """
+    if not isinstance(font_scale, mujoco.mjtFontScale):
+      font_scale = mujoco.mjtFontScale(font_scale)
+    self._gl_context = gl_context
+    with gl_context.make_current() as ctx:
+      ptr = ctx.call(mujoco.MjrContext, model.ptr, font_scale)
+      ctx.call(mujoco.mjr_setBuffer, mujoco.mjtFramebuffer.mjFB_OFFSCREEN, ptr)
+    gl_context.keep_alive(ptr)
+    gl_context.increment_refcount()
+    self._ptr = weakref.ref(ptr)
+
+  @property
+  def ptr(self):
+    return self._ptr()
+
+  def free(self):
+    """Frees the native resources held by this MjrContext.
+
+    This is an advanced feature for use when manual memory management is
+    necessary. This MjrContext object MUST NOT be used after this function has
+    been called.
+    """
+    if self._gl_context and not self._gl_context.terminated:
+      ptr = self.ptr
+      if ptr:
+        self._gl_context.dont_keep_alive(ptr)
+        with self._gl_context.make_current() as ctx:
+          ctx.call(ptr.free)
+
+    if self._gl_context:
+      self._gl_context.decrement_refcount()
+      self._gl_context.free()
+      self._gl_context = None
+
+  def __del__(self):
+    self.free()
+
+# A mapping from human-readable short names to mjtRndFlag enum values, i.e.
+# {'shadow': mjtRndFlag.mjRND_SHADOW, 'fog': mjtRndFlag.mjRND_FOG, ...}
+_NAME_TO_RENDER_FLAG_ENUM_VALUE = {
+    name[len("mjRND_"):].lower(): getattr(mujoco.mjtRndFlag, name).value
+    for name in mujoco.mjtRndFlag.__members__
+    if name != "mjRND_NUMRNDFLAG"
+}
+
+
+def _estimate_max_renderable_geoms(model):
+  """Estimates the maximum number of renderable geoms for a given model."""
+  # Only one type of object frame can be rendered at once.
+  max_nframes = max(
+      [model.nbody, model.ngeom, model.nsite, model.ncam, model.nlight])
+  # This is probably an underestimate, but it is unlikely that all possible
+  # rendering options will be enabled simultaneously, or that all renderable
+  # geoms will be present within the viewing frustum at the same time.
+  return (
+      3 * max_nframes +  # 1 geom per axis for each frame.
+      4 * model.ngeom +  # geom itself + contacts + 2 * split contact forces.
+      3 * model.nbody +  # COM + inertia box + perturbation force.
+      model.nsite +
+      model.ntendon +
+      model.njnt +
+      model.nu +
+      model.nskin +
+      model.ncam +
+      model.nlight)
+
+
+class MjvScene(mujoco.MjvScene):  # pylint: disable=missing-docstring
+
+  def __init__(self, model=None, max_geom=None):
+    """Initializes a new `MjvScene` instance.
+
+    Args:
+      model: (optional) An `MjModel` instance.
+      max_geom: (optional) An integer specifying the maximum number of geoms
+        that can be represented in the scene. If None, this will be chosen
+        automatically based on `model`.
+    """
+    if model is None:
+      super().__init__()
+    else:
+      if max_geom is None:
+        if model is None:
+          max_renderable_geoms = 0
+        else:
+          max_renderable_geoms = _estimate_max_renderable_geoms(model)
+        max_geom = max(1000, max_renderable_geoms)
+
+      super().__init__(model.ptr, max_geom)
+
+  @property
+  def ptr(self):
+    return self
+
+  @contextlib.contextmanager
+  def override_flags(self, overrides):
+    """Context manager for temporarily overriding rendering flags.
+
+    Args:
+      overrides: A mapping specifying rendering flags to override. The keys can
+        be either lowercase strings or `mjtRndFlag` enum values, and the values
+        are the overridden flag values, e.g. `{'wireframe': True}` or
+        `{mujoco.mjtRndFlag.mjRND_WIREFRAME: True}`. See `mujoco.mjtRndFlag` for
+        the set of valid flags.
+
+    Yields:
+      None
+    """
+    if not overrides:
+      yield
+    else:
+      original_flags = self.flags.copy()
+      for key, value in overrides.items():
+        index = _NAME_TO_RENDER_FLAG_ENUM_VALUE.get(key, key)
+        self.flags[index] = value
+      try:
+        yield
+      finally:
+        np.copyto(self.flags, original_flags)
+
+  def free(self):
+    """Frees the native resources held by this MjvScene.
+
+    This is an advanced feature for use when manual memory management is
+    necessary. This MjvScene object MUST NOT be used after this function has
+    been called.
+    """
+    pass
+
+  @property
+  def geoms(self):
+    """Variable-length recarray containing all geoms currently in the buffer."""
+    return super().geoms[:super().ngeom]
+
+
+class MjvPerturb(mujoco.MjvPerturb):  # pylint: disable=missing-docstring
+
+  @property
+  def ptr(self):
+    return self
+
+
+class MjvFigure(mujoco.MjvFigure):  # pylint: disable=missing-docstring
+
+  @property
+  def ptr(self):
+    return self
+
+  @property
+  def range_(self):
+    return self.range
+
+  @range_.setter
+  def range_(self, value):
+    self.range = value
