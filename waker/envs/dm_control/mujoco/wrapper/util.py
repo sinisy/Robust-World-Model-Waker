@@ -20,4 +20,32 @@ import sys
 import mujoco
 import numpy as np
 
-# Environment variable t
+# Environment variable that can be used to override the default path to the
+# MuJoCo shared library.
+ENV_MJLIB_PATH = "MJLIB_PATH"
+
+DEFAULT_ENCODING = sys.getdefaultencoding()
+
+
+def to_binary_string(s):
+  """Convert text string to binary."""
+  if isinstance(s, bytes):
+    return s
+  return s.encode(DEFAULT_ENCODING)
+
+
+def to_native_string(s):
+  """Convert a text or binary string to the native string format."""
+  if isinstance(s, bytes):
+    return s.decode(DEFAULT_ENCODING)
+  else:
+    return s
+
+
+def get_mjlib():
+  return mujoco
+
+
+@functools.wraps(np.ctypeslib.ndpointer)
+def ndptr(*args, **kwargs):
+  """Wraps `np.ctypeslib.n
