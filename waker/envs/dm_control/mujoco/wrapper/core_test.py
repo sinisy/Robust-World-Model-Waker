@@ -443,3 +443,153 @@ class CoreTest(parameterized.TestCase):
   def testContactTorque(self, condim, expected_torques):
     ball_on_floor = """
     <mujoco>
+      <worldbody>
+        <geom name='floor' type='plane' size='1 1 1'/>
+        <body name='ball' pos='0 0 .1'>
+          <freejoint/>
+          <geom name='ball' size='.1' friction='1 .1 .1'/>
+        </body>
+      </worldbody>
+    </mujoco>
+    """
+    model = core.MjModel.from_xml_string(ball_on_floor)
+    data = core.MjData(model)
+    model.geom_condim[:] = condim
+    data.qvel[3:] = np.array((1., 1., 1.))
+    # Settle for 10 timesteps (20 milliseconds):
+    for _ in range(10):
+      mujoco.mj_step(model.ptr, data.ptr)
+    contact_id = 0  # This model has only one contact.
+    _, torque = data.contact_force(contact_id)
+    nonzero_torques = torque != 0
+    np.testing.assert_array_equal(nonzero_torques, np.array((expected_torques)))
+
+  def testFreeMjrContext(self):
+    for _ in range(5):
+      renderer = _render.Renderer(640, 480)
+      mjr_context = core.MjrContext(self.model, renderer)
+      # Explicit freeing should not break any automatic GC triggered later.
+      del mjr_context
+      renderer.free()
+      del renderer
+      gc.collect()
+
+  def testSceneGeomsAttribute(self):
+    scene = core.MjvScene(model=self.model)
+    self.assertEqual(scene.ngeom, 0)
+    self.assertEmpty(scene.geoms)
+    geom_types = (
+        mujoco.mjtObj.mjOBJ_BODY,
+        mujoco.mjtObj.mjOBJ_GEOM,
+        mujoco.mjtObj.mjOBJ_SITE,
+    )
+    for geom_type in geom_types:
+      scene.ngeom += 1
+      scene.geoms[scene.ngeom - 1].objtype = geom_type
+    self.assertLen(scene.geoms, len(geom_types))
+    self.assertEqual(tuple(g.objtype for g in scene.geoms), geom_types)
+
+  def testInvalidFontScale(self):
+    invalid_font_scale = 99
+    with self.assertRaises(ValueError):
+      core.MjrContext(model=self.model,
+                      gl_context=None,  # Don't need a context for this test.
+                      font_scale=invalid_font_scale)
+
+
+def _get_attributes_test_params():
+  model = core.MjModel.from_xml_path(HUMANOID_XML_PATH)
+  data = core.MjData(model)
+  # Get the names of the non-private attributes of model and data through
+  # introspection. These are passed as parameters to each of the test methods
+  # in AttributesTest.
+  array_args = []
+  scalar_args = []
+  skipped_args = []
+  for parent_name, parent_obj in zip(("model", "data"),
+                                     (model._model, data._data)):
+    for attr_name in dir(parent_obj):
+      if not attr_name.startswith("_"):  # Skip 'private' attributes
+        args = (parent_name, attr_name)
+        attr = getattr(parent_obj, attr_name)
+        if isinstance(attr, ARRAY_TYPES):
+          array_args.append(args)
+        elif isinstance(attr, SCALAR_TYPES):
+          scalar_args.append(args)
+        elif callable(attr):
+          # Methods etc. should be covered specifically in CoreTest.
+          continue
+        else:
+          skipped_args.append(args)
+  return array_args, scalar_args, skipped_args
+
+
+_array_args, _scalar_args, _skipped_args = _get_attributes_test_params()
+
+
+class AttributesTest(parameterized.TestCase):
+  """Generic tests covering attributes of MjModel and MjData."""
+
+  # Iterates over ('parent_name', 'attr_name') tuples
+  @parameterized.parameters(*_array_args)
+  def testReadWriteArray(self, parent_name, attr_name):
+    attr = getattr(getattr(self, parent_name), attr_name)
+    if not isinstance(attr, ARRAY_TYPES):
+      raise TypeError("{}.{} has incorrect type {!r} - must be one of {!r}."
+                      .format(parent_name, attr_name, type(attr), ARRAY_TYPES))
+    # Check that we can read the contents of the array
+    _ = attr[:]
+
+    # Write unique values into the array and read them back.
+    self._write_unique_values(attr_name, attr)
+    self._take_steps()  # Take a few steps, check that we don't get segfaults.
+
+  def _write_unique_values(self, attr_name, target_array):
+    # If the target array is structured, recursively write unique values into
+    # each subfield.
+    if target_array.dtype.fields is not None:
+      for field_name in target_array.dtype.fields:
+        self._write_unique_values(attr_name, target_array[field_name])
+    # Don't write to integer arrays since these might contain pointers. Also
+    # don't write directly into the stack.
+    elif (attr_name != "stack"
+          and not np.issubdtype(target_array.dtype, np.integer)):
+      new_contents = np.arange(target_array.size, dtype=target_array.dtype)
+      new_contents.shape = target_array.shape
+      target_array[:] = new_contents
+      np.testing.assert_array_equal(new_contents, target_array[:])
+
+  @parameterized.parameters(*_scalar_args)
+  def testReadWriteScalar(self, parent_name, attr_name):
+    parent_obj = getattr(self, parent_name)
+    # Check that we can read the value.
+    attr = getattr(parent_obj, attr_name)
+    if not isinstance(attr, SCALAR_TYPES):
+      raise TypeError("{}.{} has incorrect type {!r} - must be one of {!r}."
+                      .format(parent_name, attr_name, type(attr), SCALAR_TYPES))
+    # Don't write to integers since these might be pointers.
+    if not isinstance(attr, int):
+      # Set the value of this attribute, check that we can read it back.
+      new_value = type(attr)(99)
+      setattr(parent_obj, attr_name, new_value)
+      self.assertEqual(new_value, getattr(parent_obj, attr_name))
+      self._take_steps()  # Take a few steps, check that we don't get segfaults.
+
+  @parameterized.parameters(*_skipped_args)
+  @absltest.unittest.skip("No tests defined for attributes of this type.")
+  def testSkipped(self, *unused_args):
+    # This is a do-nothing test that indicates where we currently lack coverage.
+    pass
+
+  def setUp(self):
+    super().setUp()
+    self.model = core.MjModel.from_xml_path(HUMANOID_XML_PATH)
+    self.data = core.MjData(self.model)
+
+  def _take_steps(self, n=5):
+    for _ in range(n):
+      mujoco.mj_step(self.model.ptr, self.data.ptr)
+
+
+if __name__ == "__main__":
+  absltest.main()
