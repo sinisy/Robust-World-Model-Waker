@@ -15,4 +15,17 @@
 
 """Aliases for the mujoco library, provided for backwards compatibility.
 
-New code should import mujoco directly, instead of accessin
+New code should import mujoco directly, instead of accessing these constants or
+mjlib through this module.
+"""
+import mujoco
+
+mjlib = mujoco
+
+mjDISABLESTRING = mujoco.mjDISABLESTRING
+mjENABLESTRING = mujoco.mjENABLESTRING
+mjTIMERSTRING = mujoco.mjTIMERSTRING
+mjLABELSTRING = mujoco.mjLABELSTRING
+mjFRAMESTRING = mujoco.mjFRAMESTRING
+mjVISSTRING = mujoco.mjVISSTRING
+mjRNDSTRING = mujoco.mjRNDSTRING
