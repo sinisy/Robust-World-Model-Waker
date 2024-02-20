@@ -291,3 +291,116 @@ class Task(metaclass=abc.ABCMeta):
     Args:
       physics: Instance of `Physics`.
     """
+
+  @abc.abstractmethod
+  def before_step(self, action, physics):
+    """Updates the task from the provided action.
+
+    Called by `control.Environment` before stepping the physics engine.
+
+    Args:
+      action: numpy array or array-like action values, or a nested structure of
+        such arrays. Should conform to the specification returned by
+        `self.action_spec(physics)`.
+      physics: Instance of `Physics`.
+    """
+
+  def after_step(self, physics):
+    """Optional method to update the task after the physics engine has stepped.
+
+    Called by `control.Environment` after stepping the physics engine and before
+    `control.Environment` calls `get_observation, `get_reward` and
+    `get_termination`.
+
+    The default implementation is a no-op.
+
+    Args:
+      physics: Instance of `Physics`.
+    """
+
+  @abc.abstractmethod
+  def action_spec(self, physics):
+    """Returns a specification describing the valid actions for this task.
+
+    Args:
+      physics: Instance of `Physics`.
+
+    Returns:
+      A `BoundedArraySpec`, or a nested structure containing `BoundedArraySpec`s
+      that describe the shapes, dtypes and elementwise lower and upper bounds
+      for the action array(s) passed to `self.step`.
+    """
+
+  def step_spec(self, physics):
+    """Returns a specification describing the time_step for this task.
+
+    Args:
+      physics: Instance of `Physics`.
+
+    Returns:
+      A `BoundedArraySpec`, or a nested structure containing `BoundedArraySpec`s
+      that describe the shapes, dtypes and elementwise lower and upper bounds
+      for the array(s) returned by `self.step`.
+    """
+    raise NotImplementedError()
+
+  @abc.abstractmethod
+  def get_observation(self, physics):
+    """Returns an observation from the environment.
+
+    Args:
+      physics: Instance of `Physics`.
+    """
+
+  @abc.abstractmethod
+  def get_reward(self, physics):
+    """Returns a reward from the environment.
+
+    Args:
+      physics: Instance of `Physics`.
+    """
+
+  def get_termination(self, physics):
+    """If the episode should end, returns a final discount, otherwise None."""
+
+  def observation_spec(self, physics):
+    """Optional method that returns the observation spec.
+
+    If not implemented, the Environment infers the spec from the observation.
+
+    Args:
+      physics: Instance of `Physics`.
+
+    Returns:
+      A dict mapping observation name to `ArraySpec` containing observation
+      shape and dtype.
+    """
+    raise NotImplementedError()
+
+
+def flatten_observation(observation, output_key=FLAT_OBSERVATION_KEY):
+  """Flattens multiple observation arrays into a single numpy array.
+
+  Args:
+    observation: A mutable mapping from observation names to numpy arrays.
+    output_key: The key for the flattened observation array in the output.
+
+  Returns:
+    A mutable mapping of the same type as `observation`. This will contain a
+    single key-value pair consisting of `output_key` and the flattened
+    and concatenated observation array.
+
+  Raises:
+    ValueError: If `observation` is not a `collections.abc.MutableMapping`.
+  """
+  if not isinstance(observation, collections.abc.MutableMapping):
+    raise ValueError('Can only flatten dict-like observations.')
+
+  if isinstance(observation, collections.OrderedDict):
+    keys = observation.keys()
+  else:
+    # Keep a consistent ordering for other mappings.
+    keys = sorted(observation.keys())
+
+  observation_arrays = [observation[key].ravel() for key in keys]
+  return type(observation)([(output_key, np.concatenate(observation_arrays))])
