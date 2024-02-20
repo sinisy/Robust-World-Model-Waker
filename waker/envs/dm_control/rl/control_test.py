@@ -27,4 +27,17 @@ _CONSTANT_OBSERVATION = {'observations': np.asarray(_CONSTANT_REWARD_VALUE)}
 
 _ACTION_SPEC = specs.BoundedArray(
     shape=(1,), dtype=float, minimum=0.0, maximum=1.0)
-_OBSERVATION_SPEC = {'observations': specs.Array(shape
+_OBSERVATION_SPEC = {'observations': specs.Array(shape=(), dtype=float)}
+
+
+class EnvironmentTest(parameterized.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    self._task = mock.Mock(spec=control.Task)
+    self._task.initialize_episode = mock.Mock()
+    self._task.get_observation = mock.Mock(return_value=_CONSTANT_OBSERVATION)
+    self._task.get_reward = mock.Mock(return_value=_CONSTANT_REWARD_VALUE)
+    self._task.get_termination = mock.Mock(return_value=None)
+    self._task.action_spec = mock.Mock(return_value=_ACTION_SPEC)
+    self._task.observation_spec.side_effect = NotImplementedError()
