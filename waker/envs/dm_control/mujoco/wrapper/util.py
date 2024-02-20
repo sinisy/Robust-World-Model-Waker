@@ -48,4 +48,13 @@ def get_mjlib():
 
 @functools.wraps(np.ctypeslib.ndpointer)
 def ndptr(*args, **kwargs):
-  """Wraps `np.ctypeslib.n
+  """Wraps `np.ctypeslib.ndpointer` to allow passing None for NULL pointers."""
+  base = np.ctypeslib.ndpointer(*args, **kwargs)
+
+  def from_param(_, obj):
+    if obj is None:
+      return obj
+    else:
+      return base.from_param(obj)
+
+  return type(base.__name__, (base,), {"from_param": classmethod(from_param)})
