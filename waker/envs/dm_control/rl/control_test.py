@@ -60,4 +60,17 @@ class EnvironmentTest(parameterized.TestCase):
     action = [1]
     time_step = self._env.step(action)
 
-    self._task.before_step.assert_
+    self._task.before_step.assert_called()
+    self._task.after_step.assert_called_with(self._physics)
+    self._task.get_termination.assert_called_with(self._physics)
+
+    self.assertEqual(_CONSTANT_REWARD_VALUE, time_step.reward)
+
+  @parameterized.parameters(
+      {'physics_timestep': .01, 'control_timestep': None,
+       'expected_steps': 1000},
+      {'physics_timestep': .01, 'control_timestep': .05,
+       'expected_steps': 5000})
+  def test_timeout(self, expected_steps, physics_timestep, control_timestep):
+    self._physics.timestep.return_value = physics_timestep
+    time_limit = expected_steps * (control_timestep or ph
