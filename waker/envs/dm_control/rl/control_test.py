@@ -41,3 +41,23 @@ class EnvironmentTest(parameterized.TestCase):
     self._task.get_termination = mock.Mock(return_value=None)
     self._task.action_spec = mock.Mock(return_value=_ACTION_SPEC)
     self._task.observation_spec.side_effect = NotImplementedError()
+
+    self._physics = mock.Mock(spec=control.Physics)
+    self._physics.time = mock.Mock(return_value=0.0)
+
+    self._physics.reset_context = mock.MagicMock()
+
+    self._env = control.Environment(physics=self._physics, task=self._task)
+
+  def test_environment_calls(self):
+    self._env.action_spec()
+    self._task.action_spec.assert_called_with(self._physics)
+
+    self._env.reset()
+    self._task.initialize_episode.assert_called_with(self._physics)
+    self._task.get_observation.assert_called_with(self._physics)
+
+    action = [1]
+    time_step = self._env.step(action)
+
+    self._task.before_step.assert_
