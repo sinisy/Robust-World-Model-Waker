@@ -13,4 +13,25 @@
 # limitations under the License.
 # ============================================================================
 
-"""A coll
+"""A collection of MuJoCo-based Reinforcement Learning environments."""
+
+import collections
+import inspect
+import itertools
+
+from envs.dm_control.rl import control
+
+from envs.dm_control.suite import base
+from envs.dm_control.suite import terrainwalker
+from envs.dm_control.suite import terrainhopper
+
+# Find all domains imported.
+_DOMAINS = {name: module for name, module in locals().items()
+            if inspect.ismodule(module) and hasattr(module, 'SUITE')}
+
+
+def _get_tasks(tag):
+  """Returns a sequence of (domain name, task name) pairs for the given tag."""
+  result = []
+
+  for domain_name in 
