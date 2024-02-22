@@ -92,4 +92,19 @@ class EnvironmentTest(parameterized.TestCase):
 
   def test_observation_spec(self):
     observation_spec = self._env.observation_spec()
-    self.assertEqual(_OBS
+    self.assertEqual(_OBSERVATION_SPEC, observation_spec)
+
+  def test_redundant_args_error(self):
+    with self.assertRaises(ValueError):
+      control.Environment(physics=self._physics, task=self._task,
+                          n_sub_steps=2, control_timestep=0.1)
+
+  def test_control_timestep(self):
+    self._physics.timestep.return_value = .002
+    env = control.Environment(
+        physics=self._physics, task=self._task, n_sub_steps=5)
+    self.assertEqual(.01, env.control_timestep())
+
+  def test_flatten_observations(self):
+    multimodal_obs = dict(_CONSTANT_OBSERVATION)
+    multi
