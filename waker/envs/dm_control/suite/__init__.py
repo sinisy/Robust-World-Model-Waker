@@ -59,4 +59,20 @@ def _get_tasks_by_domain(tasks):
   return {k: tuple(v) for k, v in result.items()}
 
 
-# 
+# A sequence containing all (domain name, task name) pairs.
+ALL_TASKS = _get_tasks(tag=None)
+
+# Subsets of ALL_TASKS, generated via the tag mechanism.
+BENCHMARKING = _get_tasks('benchmarking')
+EASY = _get_tasks('easy')
+HARD = _get_tasks('hard')
+EXTRA = tuple(sorted(set(ALL_TASKS) - set(BENCHMARKING)))
+NO_REWARD_VIZ = _get_tasks('no_reward_visualization')
+REWARD_VIZ = tuple(sorted(set(ALL_TASKS) - set(NO_REWARD_VIZ)))
+
+# A mapping from each domain name to a sequence of its task names.
+TASKS_BY_DOMAIN = _get_tasks_by_domain(ALL_TASKS)
+
+
+def load(domain_name, task_name, task_kwargs=None, environment_kwargs=None,
+         visu
