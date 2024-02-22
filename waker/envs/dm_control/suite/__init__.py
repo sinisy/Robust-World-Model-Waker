@@ -75,4 +75,19 @@ TASKS_BY_DOMAIN = _get_tasks_by_domain(ALL_TASKS)
 
 
 def load(domain_name, task_name, task_kwargs=None, environment_kwargs=None,
-         visu
+         visualize_reward=False):
+  """Returns an environment from a domain name, task name and optional settings.
+
+  ```python
+  env = suite.load('cartpole', 'balance')
+  ```
+
+  Args:
+    domain_name: A string containing the name of a domain.
+    task_name: A string containing the name of a task.
+    task_kwargs: Optional `dict` of keyword arguments for the task.
+    environment_kwargs: Optional `dict` specifying keyword arguments for the
+      environment.
+    visualize_reward: Optional `bool`. If `True`, object colours in rendered
+      frames are set to indicate the reward at each step. Default `False`.
+
