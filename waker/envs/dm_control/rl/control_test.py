@@ -107,4 +107,18 @@ class EnvironmentTest(parameterized.TestCase):
 
   def test_flatten_observations(self):
     multimodal_obs = dict(_CONSTANT_OBSERVATION)
-    multi
+    multimodal_obs['sensor'] = np.zeros(7, dtype=bool)
+    self._task.get_observation = mock.Mock(return_value=multimodal_obs)
+    env = control.Environment(
+        physics=self._physics, task=self._task, flat_observation=True)
+    timestep = env.reset()
+    self.assertLen(timestep.observation, 1)
+    self.assertEqual(timestep.observation[control.FLAT_OBSERVATION_KEY].size,
+                     1 + 7)
+
+
+class ComputeNStepsTest(parameterized.TestCase):
+
+  @parameterized.parameters((0.2, 0.1, 2), (.111, .111, 1), (100, 5, 20),
+                            (0.03, 0.005, 6))
+  def testComputeNS
