@@ -121,4 +121,14 @@ class ComputeNStepsTest(parameterized.TestCase):
 
   @parameterized.parameters((0.2, 0.1, 2), (.111, .111, 1), (100, 5, 20),
                             (0.03, 0.005, 6))
-  def testComputeNS
+  def testComputeNSteps(self, control_timestep, physics_timestep, expected):
+    steps = control.compute_n_steps(control_timestep, physics_timestep)
+    self.assertEqual(expected, steps)
+
+  @parameterized.parameters((3, 2), (.003, .00101))
+  def testComputeNStepsFailures(self, control_timestep, physics_timestep):
+    with self.assertRaises(ValueError):
+      control.compute_n_steps(control_timestep, physics_timestep)
+
+if __name__ == '__main__':
+  absltest.main()
