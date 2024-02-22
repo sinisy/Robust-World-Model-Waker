@@ -34,4 +34,29 @@ def _get_tasks(tag):
   """Returns a sequence of (domain name, task name) pairs for the given tag."""
   result = []
 
-  for domain_name in 
+  for domain_name in sorted(_DOMAINS.keys()):
+
+    domain = _DOMAINS[domain_name]
+
+    if tag is None:
+      tasks_in_domain = domain.SUITE
+    else:
+      tasks_in_domain = domain.SUITE.tagged(tag)
+
+    for task_name in tasks_in_domain.keys():
+      result.append((domain_name, task_name))
+
+  return tuple(result)
+
+
+def _get_tasks_by_domain(tasks):
+  """Returns a dict mapping from task name to a tuple of domain names."""
+  result = collections.defaultdict(list)
+
+  for domain_name, task_name in tasks:
+    result[domain_name].append(task_name)
+
+  return {k: tuple(v) for k, v in result.items()}
+
+
+# 
