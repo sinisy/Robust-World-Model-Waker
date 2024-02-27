@@ -105,4 +105,17 @@ def build_environment(domain_name, task_name, task_kwargs=None,
   Args:
     domain_name: A string containing the name of a domain.
     task_name: A string containing the name of a task.
-    task_kwargs: Optional `dict` specifying keyw
+    task_kwargs: Optional `dict` specifying keyword arguments for the task.
+    environment_kwargs: Optional `dict` specifying keyword arguments for the
+      environment.
+    visualize_reward: Optional `bool`. If `True`, object colours in rendered
+      frames are set to indicate the reward at each step. Default `False`.
+
+  Raises:
+    ValueError: If the domain or task doesn't exist.
+
+  Returns:
+    An instance of the requested environment.
+  """
+  if domain_name not in _DOMAINS:
+    raise ValueError('Domain {!r} does not exist.'.format(domain
