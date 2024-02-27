@@ -1,0 +1,6 @@
+
+<!--
+Common textures, colors and materials to be used throughout this suite. Some
+materials such as xxx_highlight are activated on occurence of certain events,
+for example receiving a positive reward.
+-->

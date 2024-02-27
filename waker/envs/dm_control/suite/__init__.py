@@ -118,4 +118,18 @@ def build_environment(domain_name, task_name, task_kwargs=None,
     An instance of the requested environment.
   """
   if domain_name not in _DOMAINS:
-    raise ValueError('Domain {!r} does not exist.'.format(domain
+    raise ValueError('Domain {!r} does not exist.'.format(domain_name))
+
+  domain = _DOMAINS[domain_name]
+
+  if task_name not in domain.SUITE:
+    raise ValueError('Level {!r} does not exist in domain {!r}.'.format(
+        task_name, domain_name))
+
+  task_kwargs = task_kwargs or {}
+  if environment_kwargs is not None:
+    task_kwargs = dict(task_kwargs, environment_kwargs=environment_kwargs)
+
+  env = domain.SUITE[task_name](**task_kwargs)
+  env.task.visualize_reward = visualize_reward
+  return env
