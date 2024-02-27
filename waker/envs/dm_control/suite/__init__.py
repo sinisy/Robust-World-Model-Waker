@@ -91,3 +91,18 @@ def load(domain_name, task_name, task_kwargs=None, environment_kwargs=None,
     visualize_reward: Optional `bool`. If `True`, object colours in rendered
       frames are set to indicate the reward at each step. Default `False`.
 
+  Returns:
+    The requested environment.
+  """
+  return build_environment(domain_name, task_name, task_kwargs,
+                           environment_kwargs, visualize_reward)
+
+
+def build_environment(domain_name, task_name, task_kwargs=None,
+                      environment_kwargs=None, visualize_reward=False):
+  """Returns an environment from the suite given a domain name and a task name.
+
+  Args:
+    domain_name: A string containing the name of a domain.
+    task_name: A string containing the name of a task.
+    task_kwargs: Optional `dict` specifying keyw
