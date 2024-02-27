@@ -1,0 +1,10 @@
+<mujoco model="planar hopper">
+  <include file="./common/skybox.xml"/>
+  <include file="./common/visual.xml"/>
+  <include file="./common/materials.xml"/>
+
+  <statistic extent="2" center="0 0 .5"/>
+
+  <default>
+    <default class="hopper">
+      <joint t
