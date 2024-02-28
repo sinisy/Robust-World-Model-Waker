@@ -44,4 +44,24 @@
             <joint name="knee" range="5 150"/>
             <geom name="calf" fromto="0 0 0 0 0 -.32" size="0.03"/>
             <body name="foot" pos="0 0 -.32">
-              <joint name
+              <joint name="ankle" range="-45 45"/>
+              <geom name="foot" fromto="-.08 0 0 .17 0 0" size="0.04"/>
+              <site name="touch_toe" pos=".17 0 0"/>
+              <site name="touch_heel" pos="-.08 0 0"/>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <sensor>
+    <subtreelinvel name="torso_subtreelinvel" body="torso"/>
+    <touch name="touch_toe" site="touch_toe"/>
+    <touch name="touch_heel" site="touch_heel"/>
+  </sensor>
+
+  <actuator>
+    <motor name="waist" joint="waist" gear="30"/>
+    <motor name="hip" joint="hip" gear="40"/>
+    <motor name="knee" joint="knee
