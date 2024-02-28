@@ -1,0 +1,8 @@
+<mujoco model="planar walker">
+  <include file="./common/visual.xml"/>
+  <include file="./common/skybox.xml"/>
+  <include file="./common/materials.xml"/>
+
+  <option timestep="0.0025"/>
+
+  <statistic extent="2" center="0 0 
