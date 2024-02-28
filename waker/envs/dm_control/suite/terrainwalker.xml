@@ -5,4 +5,22 @@
 
   <option timestep="0.0025"/>
 
-  <statistic extent="2" center="0 0 
+  <statistic extent="2" center="0 0 1"/>
+
+  <default>
+    <joint damping=".1" armature="0.01" limited="true" solimplimit="0 .99 .01"/>
+    <geom contype="1" conaffinity="0" friction=".7 .1 .1"/>
+    <motor ctrlrange="-1 1" ctrllimited="true"/>
+    <site size="0.01"/>
+    <default class="walker">
+      <geom material="self" type="capsule"/>
+      <joint axis="0 -1 0"/>
+    </default>
+  </default>
+
+  <asset>
+    <hfield name="terrain" ncol="2000" nrow="5" size="100 0.5 0.9 1"/>
+  </asset>
+
+  <worldbody>
+    <geom name="terrain" conaffinity="1"  type="hfield" hfield="terrain" rgba=".8 .1 .
