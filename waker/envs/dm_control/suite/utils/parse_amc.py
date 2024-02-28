@@ -29,4 +29,15 @@ _CMU_MOCAP_JOINT_ORDER = (
     'lowerbackry', 'lowerbackrz', 'upperbackrx', 'upperbackry', 'upperbackrz',
     'thoraxrx', 'thoraxry', 'thoraxrz', 'lowerneckrx', 'lowerneckry',
     'lowerneckrz', 'upperneckrx', 'upperneckry', 'upperneckrz', 'headrx',
-    'headry', 'headrz', 'rclaviclery'
+    'headry', 'headrz', 'rclaviclery', 'rclaviclerz', 'rhumerusrx',
+    'rhumerusry', 'rhumerusrz', 'rradiusrx', 'rwristry', 'rhandrx', 'rhandrz',
+    'rfingersrx', 'rthumbrx', 'rthumbrz', 'lclaviclery', 'lclaviclerz',
+    'lhumerusrx', 'lhumerusry', 'lhumerusrz', 'lradiusrx', 'lwristry',
+    'lhandrx', 'lhandrz', 'lfingersrx', 'lthumbrx', 'lthumbrz', 'rfemurrx',
+    'rfemurry', 'rfemurrz', 'rtibiarx', 'rfootrx', 'rfootrz', 'rtoesrx',
+    'lfemurrx', 'lfemurry', 'lfemurrz', 'ltibiarx', 'lfootrx', 'lfootrz',
+    'ltoesrx'
+)
+
+Converted = collections.namedtuple('Converted',
+                                   ['qpos
