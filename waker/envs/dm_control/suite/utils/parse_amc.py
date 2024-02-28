@@ -13,4 +13,20 @@
 # limitations under the License.
 # ============================================================================
 
-"""Parse and co
+"""Parse and convert amc motion capture data."""
+
+import collections
+
+from dm_control.mujoco import math as mjmath
+import numpy as np
+from scipy import interpolate
+
+MOCAP_DT = 1.0/120.0
+CONVERSION_LENGTH = 0.056444
+
+_CMU_MOCAP_JOINT_ORDER = (
+    'root0', 'root1', 'root2', 'root3', 'root4', 'root5', 'lowerbackrx',
+    'lowerbackry', 'lowerbackrz', 'upperbackrx', 'upperbackry', 'upperbackrz',
+    'thoraxrx', 'thoraxry', 'thoraxrz', 'lowerneckrx', 'lowerneckry',
+    'lowerneckrz', 'upperneckrx', 'upperneckry', 'upperneckrz', 'headrx',
+    'headry', 'headrz', 'rclaviclery'
