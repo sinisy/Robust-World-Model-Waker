@@ -58,4 +58,20 @@ def convert(file_name, physics, timestep):
         `time`, a numpy array containing the corresponding times.
   """
   frame_values = parse(file_name)
- 
+  joint2index = {}
+  for name in physics.named.data.qpos.axes.row.names:
+    joint2index[name] = physics.named.data.qpos.axes.row.convert_key_item(name)
+  index2joint = {}
+  for joint, index in joint2index.items():
+    if isinstance(index, slice):
+      indices = range(index.start, index.stop)
+    else:
+      indices = [index]
+    for ii in indices:
+      index2joint[ii] = joint
+
+  # Convert frame_values to qpos
+  amcvals2qpos_transformer = Amcvals2qpos(index2joint, _CMU_MOCAP_JOINT_ORDER)
+  qpos_values = []
+  for frame_value in frame_values:
+    qpos_values.append(amcva
