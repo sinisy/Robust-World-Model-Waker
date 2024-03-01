@@ -87,4 +87,21 @@ def convert(file_name, physics, timestep):
     time_vals_new = time_vals_new[:-1]
 
   for i in range(qpos_values.shape[1]):
-    f = interpolate.splrep(time_vals, qpos_values
+    f = interpolate.splrep(time_vals, qpos_values[:, i])
+    qpos_values_resampled.append(interpolate.splev(time_vals_new, f))
+
+  qpos_values_resampled = np.stack(qpos_values_resampled)  # nq by ntime
+
+  qvel_list = []
+  for t in range(qpos_values_resampled.shape[1]-1):
+    p_tp1 = qpos_values_resampled[:, t + 1]
+    p_t = qpos_values_resampled[:, t]
+    qvel = [(p_tp1[:3]-p_t[:3])/ timestep,
+            mjmath.mj_quat2vel(
+                mjmath.mj_quatdiff(p_t[3:7], p_tp1[3:7]), timestep),
+            (p_tp1[7:]-p_t[7:])/ timestep]
+    qvel_list.append(np.concatenate(qvel))
+
+  qvel_values_resampled = np.vstack(qvel_list).T
+
+  return C
