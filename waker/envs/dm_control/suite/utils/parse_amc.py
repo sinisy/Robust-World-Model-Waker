@@ -74,4 +74,17 @@ def convert(file_name, physics, timestep):
   amcvals2qpos_transformer = Amcvals2qpos(index2joint, _CMU_MOCAP_JOINT_ORDER)
   qpos_values = []
   for frame_value in frame_values:
-    qpos_values.append(amcva
+    qpos_values.append(amcvals2qpos_transformer(frame_value))
+  qpos_values = np.stack(qpos_values)  # Time by nq
+
+  # Interpolate/resample.
+  # Note: interpolate quaternions rather than euler angles (slerp).
+  # see https://en.wikipedia.org/wiki/Slerp
+  qpos_values_resampled = []
+  time_vals = np.arange(0, len(frame_values)*MOCAP_DT - 1e-8, MOCAP_DT)
+  time_vals_new = np.arange(0, len(frame_values)*MOCAP_DT, timestep)
+  while time_vals_new[-1] > time_vals[-1]:
+    time_vals_new = time_vals_new[:-1]
+
+  for i in range(qpos_values.shape[1]):
+    f = interpolate.splrep(time_vals, qpos_values
