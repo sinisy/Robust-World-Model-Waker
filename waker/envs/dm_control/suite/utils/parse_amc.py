@@ -40,4 +40,22 @@ _CMU_MOCAP_JOINT_ORDER = (
 )
 
 Converted = collections.namedtuple('Converted',
-                                   ['qpos
+                                   ['qpos', 'qvel', 'time'])
+
+
+def convert(file_name, physics, timestep):
+  """Converts the parsed .amc values into qpos and qvel values and resamples.
+
+  Args:
+    file_name: The .amc file to be parsed and converted.
+    physics: The corresponding physics instance.
+    timestep: Desired output interval between resampled frames.
+
+  Returns:
+    A namedtuple with fields:
+        `qpos`, a numpy array containing converted positional variables.
+        `qvel`, a numpy array containing converted velocity variables.
+        `time`, a numpy array containing the corresponding times.
+  """
+  frame_values = parse(file_name)
+ 
