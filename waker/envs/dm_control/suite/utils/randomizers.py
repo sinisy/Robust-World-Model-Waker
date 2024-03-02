@@ -36,4 +36,19 @@ def randomize_limited_and_rotational_joints(physics, random=None):
   """Randomizes the positions of joints defined in the physics body.
 
   The following randomization rules apply:
-    - Bounded joints (hinges or sliders) are sampled unifor
+    - Bounded joints (hinges or sliders) are sampled uniformly in the bounds.
+    - Unbounded hinges are samples uniformly in [-pi, pi]
+    - Quaternions for unlimited free joints and ball joints are sampled
+      uniformly on the unit 3-sphere.
+    - Quaternions for limited ball joints are sampled uniformly on a sector
+      of the unit 3-sphere.
+    - The linear degrees of freedom of free joints are not randomized.
+
+  Args:
+    physics: Instance of 'Physics' class that holds a loaded model.
+    random: Optional instance of 'np.random.RandomState'. Defaults to the global
+      NumPy random state.
+  """
+  random = random or np.random
+
+  hinge = mjb
