@@ -146,4 +146,20 @@ def parse(file_name):
 
 
 class Amcvals2qpos:
-  """Callable that converts .amc values for a fr
+  """Callable that converts .amc values for a frame and to MuJoCo qpos format.
+  """
+
+  def __init__(self, index2joint, joint_order):
+    """Initializes a new Amcvals2qpos instance.
+
+    Args:
+      index2joint: List of joint angles in .amc file.
+      joint_order: List of joint names in MuJoco MJCF.
+    """
+    # Root is x,y,z, then quat.
+    # need to get indices of qpos that order for amc default order
+    self.qpos_root_xyz_ind = [0, 1, 2]
+    self.root_xyz_ransform = np.array(
+        [[1, 0, 0], [0, 0, -1], [0, 1, 0]]) * CONVERSION_LENGTH
+    self.qpos_root_quat_ind = [3, 4, 5, 6]
+    amc2qpos_transform = np.zeros((len(index2joint
