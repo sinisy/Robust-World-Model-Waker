@@ -125,4 +125,25 @@ def parse(file_name):
         if not line or line == str(frame_ind):
           values.append(np.array(frame_vals, dtype=float))
           break
-        tokens = line
+        tokens = line.split()
+        frame_vals.extend(tokens[1:])
+    # Parse other frames.
+    elif line == str(frame_ind):
+      frame_ind += 1
+      frame_vals = []
+      while True:
+        line = fid.readline().strip()
+        if not line or line == str(frame_ind):
+          values.append(np.array(frame_vals, dtype=float))
+          break
+        tokens = line.split()
+        frame_vals.extend(tokens[1:])
+    else:
+      line = fid.readline().strip()
+      if not line:
+        break
+  return values
+
+
+class Amcvals2qpos:
+  """Callable that converts .amc values for a fr
