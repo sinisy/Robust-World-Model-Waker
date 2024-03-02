@@ -177,4 +177,14 @@ class Amcvals2qpos:
   def __call__(self, amc_val):
     """Converts a `.amc` frame to MuJoCo qpos format."""
     amc_val_rad = np.deg2rad(amc_val)
-    qpos 
+    qpos = np.dot(self.amc2qpos_transform, amc_val_rad)
+
+    # Root.
+    qpos[:3] = np.dot(self.root_xyz_ransform, amc_val[:3])
+    qpos_quat = mjmath.euler2quat(amc_val[3], amc_val[4], amc_val[5])
+    qpos_quat = mjmath.mj_quatprod(mjmath.euler2quat(90, 0, 0), qpos_quat)
+
+    for i, ind in enumerate(self.qpos_root_quat_ind):
+      qpos[ind] = qpos_quat[i]
+
+    return qpos
