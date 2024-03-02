@@ -16,4 +16,24 @@
 """Randomization functions."""
 
 
-from dm_control.mujoco.wrapp
+from dm_control.mujoco.wrapper import mjbindings
+import numpy as np
+
+
+def random_limited_quaternion(random, limit):
+  """Generates a random quaternion limited to the specified rotations."""
+  axis = random.randn(3)
+  axis /= np.linalg.norm(axis)
+  angle = random.rand() * limit
+
+  quaternion = np.zeros(4)
+  mjbindings.mjlib.mju_axisAngle2Quat(quaternion, axis, angle)
+
+  return quaternion
+
+
+def randomize_limited_and_rotational_joints(physics, random=None):
+  """Randomizes the positions of joints defined in the physics body.
+
+  The following randomization rules apply:
+    - Bounded joints (hinges or sliders) are sampled unifor
