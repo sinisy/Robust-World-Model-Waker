@@ -162,4 +162,19 @@ class Amcvals2qpos:
     self.root_xyz_ransform = np.array(
         [[1, 0, 0], [0, 0, -1], [0, 1, 0]]) * CONVERSION_LENGTH
     self.qpos_root_quat_ind = [3, 4, 5, 6]
-    amc2qpos_transform = np.zeros((len(index2joint
+    amc2qpos_transform = np.zeros((len(index2joint), len(joint_order)))
+    for i in range(len(index2joint)):
+      for j in range(len(joint_order)):
+        if index2joint[i] == joint_order[j]:
+          if 'rx' in index2joint[i]:
+            amc2qpos_transform[i][j] = 1
+          elif 'ry' in index2joint[i]:
+            amc2qpos_transform[i][j] = 1
+          elif 'rz' in index2joint[i]:
+            amc2qpos_transform[i][j] = 1
+    self.amc2qpos_transform = amc2qpos_transform
+
+  def __call__(self, amc_val):
+    """Converts a `.amc` frame to MuJoCo qpos format."""
+    amc_val_rad = np.deg2rad(amc_val)
+    qpos 
