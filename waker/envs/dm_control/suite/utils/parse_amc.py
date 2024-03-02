@@ -104,4 +104,25 @@ def convert(file_name, physics, timestep):
 
   qvel_values_resampled = np.vstack(qvel_list).T
 
-  return C
+  return Converted(qpos_values_resampled, qvel_values_resampled, time_vals_new)
+
+
+def parse(file_name):
+  """Parses the amc file format."""
+  values = []
+  fid = open(file_name, 'r')
+  line = fid.readline().strip()
+  frame_ind = 1
+  first_frame = True
+  while True:
+    # Parse first frame.
+    if first_frame and line[0] == str(frame_ind):
+      first_frame = False
+      frame_ind += 1
+      frame_vals = []
+      while True:
+        line = fid.readline().strip()
+        if not line or line == str(frame_ind):
+          values.append(np.array(frame_vals, dtype=float))
+          break
+        tokens = line
