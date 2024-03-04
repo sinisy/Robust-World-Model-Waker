@@ -32,4 +32,17 @@ class RandomizeUnlimitedJointsTest(parameterized.TestCase):
     self.rand = np.random.RandomState(100)
 
   def test_single_joint_of_each_type(self):
-    physic
+    physics = mujoco.Physics.from_xml_string("""<mujoco>
+          <default>
+            <joint range="0 90" />
+          </default>
+          <worldbody>
+            <body>
+              <geom type="box" size="1 1 1"/>
+              <joint name="free" type="free"/>
+            </body>
+            <body>
+              <geom type="box" size="1 1 1"/>
+              <joint name="limited_hinge" type="hinge" limited="true"/>
+              <joint name="slide" type="slide" limited="false"/>
+              <joint name="limited_slide" type="slide" limite
