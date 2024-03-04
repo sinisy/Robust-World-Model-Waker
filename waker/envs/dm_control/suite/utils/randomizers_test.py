@@ -45,4 +45,19 @@ class RandomizeUnlimitedJointsTest(parameterized.TestCase):
               <geom type="box" size="1 1 1"/>
               <joint name="limited_hinge" type="hinge" limited="true"/>
               <joint name="slide" type="slide" limited="false"/>
-              <joint name="limited_slide" type="slide" limite
+              <joint name="limited_slide" type="slide" limited="true"/>
+              <joint name="hinge" type="hinge" limited="false"/>
+            </body>
+            <body>
+              <geom type="box" size="1 1 1"/>
+              <joint name="ball" type="ball" limited="false"/>
+            </body>
+            <body>
+              <geom type="box" size="1 1 1"/>
+              <joint name="limited_ball" type="ball" limited="true"/>
+            </body>
+          </worldbody>
+        </mujoco>""")
+
+    randomizers.randomize_limited_and_rotational_joints(physics, self.rand)
+    self.assertNotEqual(0., physics.named.data.qpos['
