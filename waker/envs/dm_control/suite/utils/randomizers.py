@@ -84,4 +84,6 @@ def randomize_limited_and_rotational_joints(physics, random=None):
         # this should be random.randn, but changing it now could significantly
         # affect benchmark results.
         quat = random.rand(4)
-        quat /= 
+        quat /= np.linalg.norm(quat)
+        qpos[joint_name][3:] = quat
+
