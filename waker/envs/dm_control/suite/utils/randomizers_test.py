@@ -72,4 +72,19 @@ class RandomizeUnlimitedJointsTest(parameterized.TestCase):
     # Unlimited slide and the positional part of the free joint remains
     # uninitialized.
     self.assertEqual(0., physics.named.data.qpos['slide'])
-    self.assertEqual(0., np.sum(ph
+    self.assertEqual(0., np.sum(physics.named.data.qpos['free'][:3]))
+
+  def test_multiple_joints_of_same_type(self):
+    physics = mujoco.Physics.from_xml_string("""<mujoco>
+          <worldbody>
+            <body>
+              <geom type="box" size="1 1 1"/>
+              <joint name="hinge_1" type="hinge"/>
+              <joint name="hinge_2" type="hinge"/>
+              <joint name="hinge_3" type="hinge"/>
+            </body>
+          </worldbody>
+        </mujoco>""")
+
+    randomizers.randomize_limited_and_rotational_joints(physics, self.rand)
+    self.assertNotEqual(0
