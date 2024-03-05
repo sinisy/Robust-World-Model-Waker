@@ -60,4 +60,16 @@ class RandomizeUnlimitedJointsTest(parameterized.TestCase):
         </mujoco>""")
 
     randomizers.randomize_limited_and_rotational_joints(physics, self.rand)
-    self.assertNotEqual(0., physics.named.data.qpos['
+    self.assertNotEqual(0., physics.named.data.qpos['hinge'])
+    self.assertNotEqual(0., physics.named.data.qpos['limited_hinge'])
+    self.assertNotEqual(0., physics.named.data.qpos['limited_slide'])
+
+    self.assertNotEqual(0., np.sum(physics.named.data.qpos['ball']))
+    self.assertNotEqual(0., np.sum(physics.named.data.qpos['limited_ball']))
+
+    self.assertNotEqual(0., np.sum(physics.named.data.qpos['free'][3:]))
+
+    # Unlimited slide and the positional part of the free joint remains
+    # uninitialized.
+    self.assertEqual(0., physics.named.data.qpos['slide'])
+    self.assertEqual(0., np.sum(ph
