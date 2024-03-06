@@ -87,4 +87,18 @@ class RandomizeUnlimitedJointsTest(parameterized.TestCase):
         </mujoco>""")
 
     randomizers.randomize_limited_and_rotational_joints(physics, self.rand)
-    self.assertNotEqual(0
+    self.assertNotEqual(0., physics.named.data.qpos['hinge_1'])
+    self.assertNotEqual(0., physics.named.data.qpos['hinge_2'])
+    self.assertNotEqual(0., physics.named.data.qpos['hinge_3'])
+
+    self.assertNotEqual(physics.named.data.qpos['hinge_1'],
+                        physics.named.data.qpos['hinge_2'])
+
+    self.assertNotEqual(physics.named.data.qpos['hinge_2'],
+                        physics.named.data.qpos['hinge_3'])
+
+    self.assertNotEqual(physics.named.data.qpos['hinge_1'],
+                        physics.named.data.qpos['hinge_3'])
+
+  def test_unlimited_hinge_randomization_range(self):
+    physics = mujoco.
