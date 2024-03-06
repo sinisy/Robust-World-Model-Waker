@@ -101,4 +101,22 @@ class RandomizeUnlimitedJointsTest(parameterized.TestCase):
                         physics.named.data.qpos['hinge_3'])
 
   def test_unlimited_hinge_randomization_range(self):
-    physics = mujoco.
+    physics = mujoco.Physics.from_xml_string("""<mujoco>
+          <worldbody>
+            <body>
+              <geom type="box" size="1 1 1"/>
+              <joint name="hinge" type="hinge"/>
+            </body>
+          </worldbody>
+        </mujoco>""")
+
+    for _ in range(10):
+      randomizers.randomize_limited_and_rotational_joints(physics, self.rand)
+      self.assertBetween(physics.named.data.qpos['hinge'], -np.pi, np.pi)
+
+  def test_limited_1d_joint_limits_are_respected(self):
+    physics = mujoco.Physics.from_xml_string("""<mujoco>
+          <default>
+            <joint limited="true"/>
+          </default>
+   
