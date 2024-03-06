@@ -119,4 +119,19 @@ class RandomizeUnlimitedJointsTest(parameterized.TestCase):
           <default>
             <joint limited="true"/>
           </default>
-   
+          <worldbody>
+            <body>
+              <geom type="box" size="1 1 1"/>
+              <joint name="hinge" type="hinge" range="0 10"/>
+              <joint name="slide" type="slide" range="30 50"/>
+            </body>
+          </worldbody>
+        </mujoco>""")
+
+    for _ in range(10):
+      randomizers.randomize_limited_and_rotational_joints(physics, self.rand)
+      self.assertBetween(physics.named.data.qpos['hinge'],
+                         np.deg2rad(0), np.deg2rad(10))
+      self.assertBetween(physics.named.data.qpos['slide'], 30, 50)
+
+  def test_limited_ball_joint_are_res
