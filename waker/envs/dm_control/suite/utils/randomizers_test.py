@@ -134,4 +134,20 @@ class RandomizeUnlimitedJointsTest(parameterized.TestCase):
                          np.deg2rad(0), np.deg2rad(10))
       self.assertBetween(physics.named.data.qpos['slide'], 30, 50)
 
-  def test_limited_ball_joint_are_res
+  def test_limited_ball_joint_are_respected(self):
+    physics = mujoco.Physics.from_xml_string("""<mujoco>
+          <worldbody>
+            <body name="body" zaxis="1 0 0">
+              <geom type="box" size="1 1 1"/>
+              <joint name="ball" type="ball" limited="true" range="0 60"/>
+            </body>
+          </worldbody>
+        </mujoco>""")
+
+    body_axis = np.array([1., 0., 0.])
+    joint_axis = np.zeros(3)
+    for _ in range(10):
+      randomizers.randomize_limited_and_rotational_joints(physics, self.rand)
+
+      quat = physics.named.data.qpos['ball']
+      mjlib.mju_rotVecQuat(joint_axis, body_axis, quat)
