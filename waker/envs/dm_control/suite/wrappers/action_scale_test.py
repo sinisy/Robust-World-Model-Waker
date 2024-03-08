@@ -31,4 +31,21 @@ def make_action_spec(lower=(-1.,), upper=(1.,)):
 
 
 def make_mock_env(action_spec):
-  env =
+  env = mock.Mock(spec=control.Environment)
+  env.action_spec.return_value = action_spec
+  return env
+
+
+class ActionScaleTest(parameterized.TestCase):
+
+  def assertStepCalledOnceWithCorrectAction(self, env, expected_action):
+    # NB: `assert_called_once_with()` doesn't support numpy arrays.
+    env.step.assert_called_once()
+    actual_action = env.step.call_args_list[0][0][0]
+    np.testing.assert_array_equal(expected_action, actual_action)
+
+  @parameterized.parameters(
+      {
+          'minimum': np.r_[-1., -1.],
+          'maximum': np.r_[1., 1.],
+          'scaled_minimum': np.r
