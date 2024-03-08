@@ -48,4 +48,24 @@ class ActionScaleTest(parameterized.TestCase):
       {
           'minimum': np.r_[-1., -1.],
           'maximum': np.r_[1., 1.],
-          'scaled_minimum': np.r
+          'scaled_minimum': np.r_[-2., -2.],
+          'scaled_maximum': np.r_[2., 2.],
+      },
+      {
+          'minimum': np.r_[-2., -2.],
+          'maximum': np.r_[2., 2.],
+          'scaled_minimum': np.r_[-1., -1.],
+          'scaled_maximum': np.r_[1., 1.],
+      },
+      {
+          'minimum': np.r_[-1., -1.],
+          'maximum': np.r_[1., 1.],
+          'scaled_minimum': np.r_[-2., -2.],
+          'scaled_maximum': np.r_[1., 1.],
+      },
+      {
+          'minimum': np.r_[-1., -1.],
+          'maximum': np.r_[1., 1.],
+          'scaled_minimum': np.r_[-1., -1.],
+          'scaled_maximum': np.r_[2., 2.],
+      },
