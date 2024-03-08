@@ -11,4 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or  implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ============
+# ============================================================================
+
+"""Tests for the action scale wrapper."""
+
+from absl.testing import absltest
+from absl.testing import parameterized
+from envs.dm_control.rl import control
+from envs.dm_control.suite.wrappers import action_scale
+from dm_env import specs
+import mock
+import numpy as np
+
+
+def make_action_spec(lower=(-1.,), upper=(1.,)):
+  lower, upper = np.broadcast_arrays(lower, upper)
+  return specs.BoundedArray(
+      shape=lower.shape, dtype=float, minimum=lower, maximum=upper)
+
+
+def make_mock_env(action_spec):
+  env =
