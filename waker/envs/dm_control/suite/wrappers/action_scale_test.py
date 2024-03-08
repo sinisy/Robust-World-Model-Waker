@@ -112,4 +112,20 @@ class ActionScaleTest(parameterized.TestCase):
     env_method = getattr(env, method_name)
     wrapper_method = getattr(wrapped_env, method_name)
     out = wrapper_method()
-    env_method.assert_called_on
+    env_method.assert_called_once_with()
+    self.assertIs(out, env_method())
+
+  def test_invalid_action_spec_type(self):
+    action_spec = [make_action_spec()] * 2
+    env = make_mock_env(action_spec=action_spec)
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        action_scale._ACTION_SPEC_MUST_BE_BOUNDED_ARRAY.format(action_spec)):
+      action_scale.Wrapper(env, minimum=0, maximum=1)
+
+  @parameterized.parameters(
+      {'name': 'minimum', 'bounds': np.r_[np.nan]},
+      {'name': 'minimum', 'bounds': np.r_[-np.inf]},
+      {'name': 'maximum', 'bounds': np.r_[np.inf]},
+  )
+  def test_non_finit
