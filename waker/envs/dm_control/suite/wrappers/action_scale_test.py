@@ -100,4 +100,16 @@ class ActionScaleTest(parameterized.TestCase):
     original_action_spec = make_action_spec(
         lower=np.r_[-2., -2.], upper=np.r_[2., 2.])
     env = make_mock_env(action_spec=original_action_spec)
-    wrapped_env = action_scale.Wrapper(env, minimum=minimum
+    wrapped_env = action_scale.Wrapper(env, minimum=minimum, maximum=maximum)
+    new_action_spec = wrapped_env.action_spec()
+    np.testing.assert_array_equal(new_action_spec.minimum, minimum)
+    np.testing.assert_array_equal(new_action_spec.maximum, maximum)
+
+  @parameterized.parameters('reset', 'observation_spec', 'control_timestep')
+  def test_method_delegated_to_underlying_env(self, method_name):
+    env = make_mock_env(action_spec=make_action_spec())
+    wrapped_env = action_scale.Wrapper(env, minimum=0, maximum=1)
+    env_method = getattr(env, method_name)
+    wrapper_method = getattr(wrapped_env, method_name)
+    out = wrapper_method()
+    env_method.assert_called_on
