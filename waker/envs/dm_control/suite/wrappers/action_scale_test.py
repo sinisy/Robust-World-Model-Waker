@@ -69,3 +69,18 @@ class ActionScaleTest(parameterized.TestCase):
           'scaled_minimum': np.r_[-1., -1.],
           'scaled_maximum': np.r_[2., 2.],
       },
+  )
+  def test_step(self, minimum, maximum, scaled_minimum, scaled_maximum):
+    action_spec = make_action_spec(lower=minimum, upper=maximum)
+    env = make_mock_env(action_spec=action_spec)
+    wrapped_env = action_scale.Wrapper(
+        env, minimum=scaled_minimum, maximum=scaled_maximum)
+
+    time_step = wrapped_env.step(scaled_minimum)
+    self.assertStepCalledOnceWithCorrectAction(env, minimum)
+    self.assertIs(time_step, env.step(minimum))
+
+    env.reset_mock()
+
+    time_step = wrapped_env.step(scaled_maximum)
+    self.assertS
