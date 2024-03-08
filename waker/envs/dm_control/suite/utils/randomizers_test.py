@@ -151,3 +151,9 @@ class RandomizeUnlimitedJointsTest(parameterized.TestCase):
 
       quat = physics.named.data.qpos['ball']
       mjlib.mju_rotVecQuat(joint_axis, body_axis, quat)
+      angle_cos = np.dot(body_axis, joint_axis)
+      self.assertGreater(angle_cos, 0.5)  # cos(60) = 0.5
+
+
+if __name__ == '__main__':
+  absltest.main()
