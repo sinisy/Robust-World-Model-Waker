@@ -101,3 +101,8 @@ class Wrapper(dm_env.Environment):
     timing = self._env.physics.data.timer[0]
 
     observation[self._observation_key] = np.array(
+        [timing.duration, timing.number], dtype=np.double)
+    return time_step._replace(observation=observation)
+
+  def __getattr__(self, name):
+    return getattr(self._env, name)
