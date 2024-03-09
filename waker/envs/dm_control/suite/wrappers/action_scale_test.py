@@ -141,4 +141,17 @@ class ActionScaleTest(parameterized.TestCase):
       {'name': 'minimum', 'bounds': np.r_[1., 2., 3.]},
       {'name': 'minimum', 'bounds': np.r_[[1.], [2.], [3.]]},
   )
-  def test_invalid_bounds_shape(self, nam
+  def test_invalid_bounds_shape(self, name, bounds):
+    shape = (2,)
+    kwargs = {'minimum': np.zeros(shape), 'maximum': np.ones(shape)}
+    kwargs[name] = bounds
+    action_spec = make_action_spec(lower=[-1, -1], upper=[2, 3])
+    env = make_mock_env(action_spec=action_spec)
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        action_scale._MUST_BROADCAST.format(
+            name=name, bounds=bounds, shape=shape)):
+      action_scale.Wrapper(env, **kwargs)
+
+if __name__ == '__main__':
+  absltest.main()
