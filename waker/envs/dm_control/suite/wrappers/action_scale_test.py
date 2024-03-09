@@ -128,4 +128,17 @@ class ActionScaleTest(parameterized.TestCase):
       {'name': 'minimum', 'bounds': np.r_[-np.inf]},
       {'name': 'maximum', 'bounds': np.r_[np.inf]},
   )
-  def test_non_finit
+  def test_non_finite_bounds(self, name, bounds):
+    kwargs = {'minimum': np.r_[-1.], 'maximum': np.r_[1.]}
+    kwargs[name] = bounds
+    env = make_mock_env(action_spec=make_action_spec())
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        action_scale._MUST_BE_FINITE.format(name=name, bounds=bounds)):
+      action_scale.Wrapper(env, **kwargs)
+
+  @parameterized.parameters(
+      {'name': 'minimum', 'bounds': np.r_[1., 2., 3.]},
+      {'name': 'minimum', 'bounds': np.r_[[1.], [2.], [3.]]},
+  )
+  def test_invalid_bounds_shape(self, nam
