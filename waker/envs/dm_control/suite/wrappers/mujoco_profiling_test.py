@@ -31,4 +31,17 @@ class MujocoProfilingTest(absltest.TestCase):
 
     # Make sure we are testing the right environment for the test.
     observation_spec = env.observation_spec()
-    self.assertIsInstance(observa
+    self.assertIsInstance(observation_spec, collections.OrderedDict)
+
+    # The wrapper should only add one observation.
+    wrapped = mujoco_profiling.Wrapper(env, observation_key=obs_key)
+
+    wrapped_observation_spec = wrapped.observation_spec()
+    self.assertIsInstance(wrapped_observation_spec, collections.OrderedDict)
+
+    expected_length = len(observation_spec) + 1
+    self.assertLen(wrapped_observation_spec, expected_length)
+    expected_keys = list(observation_spec.keys()) + [obs_key]
+    self.assertEqual(expected_keys, list(wrapped_observation_spec.keys()))
+
+    # Check that the
