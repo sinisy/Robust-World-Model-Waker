@@ -19,4 +19,19 @@ import collections
 import dm_env
 from dm_env import specs
 
-STATE_
+STATE_KEY = 'state'
+
+
+class Wrapper(dm_env.Environment):
+  """Wraps a control environment and adds a rendered pixel observation."""
+
+  def __init__(self, env, pixels_only=True, render_kwargs=None,
+               observation_key='pixels'):
+    """Initializes a new pixel Wrapper.
+
+    Args:
+      env: The environment to wrap.
+      pixels_only: If True (default), the original set of 'state' observations
+        returned by the wrapped environment will be discarded, and the
+        `OrderedDict` of observations will only contain pixels. If False, the
+        `OrderedDict` will contain th
