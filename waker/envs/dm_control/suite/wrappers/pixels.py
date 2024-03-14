@@ -98,4 +98,18 @@ class Wrapper(dm_env.Environment):
   def action_spec(self):
     return self._env.action_spec()
 
-  def _add_pixe
+  def _add_pixel_observation(self, time_step):
+    if self._pixels_only:
+      observation = collections.OrderedDict()
+    elif self._observation_is_dict:
+      observation = type(time_step.observation)(time_step.observation)
+    else:
+      observation = collections.OrderedDict()
+      observation[STATE_KEY] = time_step.observation
+
+    pixels = self._env.physics.render(**self._render_kwargs)
+    observation[self._observation_key] = pixels
+    return time_step._replace(observation=observation)
+
+  def __getattr__(self, name):
+    return getattr(self._env, name)
