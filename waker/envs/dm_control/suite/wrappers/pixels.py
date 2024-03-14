@@ -46,4 +46,20 @@ class Wrapper(dm_env.Environment):
         wrapper. Supported formats are a single array, or a dict of arrays.
       ValueError: If `env`'s observation already contains the specified
         `observation_key`.
-   
+    """
+    if render_kwargs is None:
+      render_kwargs = {}
+
+    wrapped_observation_spec = env.observation_spec()
+
+    if isinstance(wrapped_observation_spec, specs.Array):
+      self._observation_is_dict = False
+      invalid_keys = set([STATE_KEY])
+    elif isinstance(wrapped_observation_spec, collections.abc.MutableMapping):
+      self._observation_is_dict = True
+      invalid_keys = set(wrapped_observation_spec.keys())
+    else:
+      raise ValueError('Unsupported observation spec structure.')
+
+    if not pixels_only and observation_key in invalid_keys:
+      raise ValueError('Duplicat
