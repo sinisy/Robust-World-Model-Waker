@@ -77,4 +77,25 @@ class Wrapper(dm_env.Environment):
     pixels = env.physics.render(**render_kwargs)
     pixels_spec = specs.Array(
         shape=pixels.shape, dtype=pixels.dtype, name=observation_key)
-    self._obs
+    self._observation_spec[observation_key] = pixels_spec
+
+    self._env = env
+    self._pixels_only = pixels_only
+    self._render_kwargs = render_kwargs
+    self._observation_key = observation_key
+
+  def reset(self):
+    time_step = self._env.reset()
+    return self._add_pixel_observation(time_step)
+
+  def step(self, action):
+    time_step = self._env.step(action)
+    return self._add_pixel_observation(time_step)
+
+  def observation_spec(self):
+    return self._observation_spec
+
+  def action_spec(self):
+    return self._env.action_spec()
+
+  def _add_pixe
