@@ -62,4 +62,19 @@ class Wrapper(dm_env.Environment):
       raise ValueError('Unsupported observation spec structure.')
 
     if not pixels_only and observation_key in invalid_keys:
-      raise ValueError('Duplicat
+      raise ValueError('Duplicate or reserved observation key {!r}.'
+                       .format(observation_key))
+
+    if pixels_only:
+      self._observation_spec = collections.OrderedDict()
+    elif self._observation_is_dict:
+      self._observation_spec = wrapped_observation_spec.copy()
+    else:
+      self._observation_spec = collections.OrderedDict()
+      self._observation_spec[STATE_KEY] = wrapped_observation_spec
+
+    # Extend observation spec.
+    pixels = env.physics.render(**render_kwargs)
+    pixels_spec = specs.Array(
+        shape=pixels.shape, dtype=pixels.dtype, name=observation_key)
+    self._obs
