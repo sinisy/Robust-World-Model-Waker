@@ -34,4 +34,16 @@ class Wrapper(dm_env.Environment):
       pixels_only: If True (default), the original set of 'state' observations
         returned by the wrapped environment will be discarded, and the
         `OrderedDict` of observations will only contain pixels. If False, the
-        `OrderedDict` will contain th
+        `OrderedDict` will contain the original observations as well as the
+        pixel observations.
+      render_kwargs: Optional `dict` containing keyword arguments passed to the
+        `mujoco.Physics.render` method.
+      observation_key: Optional custom string specifying the pixel observation's
+        key in the `OrderedDict` of observations. Defaults to 'pixels'.
+
+    Raises:
+      ValueError: If `env`'s observation spec is not compatible with the
+        wrapper. Supported formats are a single array, or a dict of arrays.
+      ValueError: If `env`'s observation already contains the specified
+        `observation_key`.
+   
