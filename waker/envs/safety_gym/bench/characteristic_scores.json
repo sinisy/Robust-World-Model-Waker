@@ -71,4 +71,22 @@
     },
     "pointgoal1":	{
         "Cost":	53.109,
-       
+        "CostRate":	0.063,
+        "Ret":	25.179
+    },
+    "pointgoal2":	{
+        "Cost":	196.736,
+        "CostRate":	0.2,
+        "Ret":	22.515
+    },
+    "pointpush1":	{
+        "Cost":	47.804,
+        "CostRate":	0.054,
+        "Ret":	3.114
+    },
+    "pointpush2":	{
+        "Cost":	71.733,
+        "CostRate":	0.075,
+        "Ret":	2.217
+    }
+}
