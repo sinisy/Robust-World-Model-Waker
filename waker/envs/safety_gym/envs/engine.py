@@ -1330,3 +1330,514 @@ class Engine(gym.Env, gym.utils.EzPickle):
             bin = int(angle / bin_size)
             bin_angle = bin_size * bin
             if self.lidar_max_dist is None:
+                sensor = np.exp(-self.lidar_exp_gain * dist)
+            else:
+                sensor = max(0, self.lidar_max_dist - dist) / self.lidar_max_dist
+            obs[bin] = max(obs[bin], sensor)
+            # Aliasing
+            if self.lidar_alias:
+                alias = (angle - bin_angle) / bin_size
+                assert 0 <= alias <= 1, f'bad alias {alias}, dist {dist}, angle {angle}, bin {bin}'
+                bin_plus = (bin + 1) % self.lidar_num_bins
+                bin_minus = (bin - 1) % self.lidar_num_bins
+                obs[bin_plus] = max(obs[bin_plus], alias * sensor)
+                obs[bin_minus] = max(obs[bin_minus], (1 - alias) * sensor)
+        return obs
+
+    def obs(self):
+        ''' Return the observation of our agent '''
+        self.sim.forward()  # Needed to get sensordata correct
+        obs = {}
+
+        if self.observe_goal_dist:
+            obs['goal_dist'] = np.array([np.exp(-self.dist_goal())])
+        if self.observe_goal_comp:
+            obs['goal_compass'] = self.obs_compass(self.goal_pos)
+        if self.observe_goal_lidar:
+            obs['goal_lidar'] = self.obs_lidar([self.goal_pos], GROUP_GOAL)
+        if self.task == 'push':
+            box_pos = self.box_pos
+            if self.observe_box_comp:
+                obs['box_compass'] = self.obs_compass(box_pos)
+            if self.observe_box_lidar:
+                obs['box_lidar'] = self.obs_lidar([box_pos], GROUP_BOX)
+        if self.task == 'circle' and self.observe_circle:
+            obs['circle_lidar'] = self.obs_lidar([self.goal_pos], GROUP_CIRCLE)
+        if self.observe_freejoint:
+            joint_id = self.model.joint_name2id('robot')
+            joint_qposadr = self.model.jnt_qposadr[joint_id]
+            assert joint_qposadr == 0  # Needs to be the first entry in qpos
+            obs['freejoint'] = self.data.qpos[:7]
+        if self.observe_com:
+            obs['com'] = self.world.robot_com()
+        if self.observe_sensors:
+            # Sensors which can be read directly, without processing
+            for sensor in self.sensors_obs:  # Explicitly listed sensors
+                obs[sensor] = self.world.get_sensor(sensor)
+            for sensor in self.robot.hinge_vel_names:
+                obs[sensor] = self.world.get_sensor(sensor)
+            for sensor in self.robot.ballangvel_names:
+                obs[sensor] = self.world.get_sensor(sensor)
+            # Process angular position sensors
+            if self.sensors_angle_components:
+                for sensor in self.robot.hinge_pos_names:
+                    theta = float(self.world.get_sensor(sensor))  # Ensure not 1D, 1-element array
+                    obs[sensor] = np.array([np.sin(theta), np.cos(theta)])
+                for sensor in self.robot.ballquat_names:
+                    quat = self.world.get_sensor(sensor)
+                    obs[sensor] = quat2mat(quat)
+            else:  # Otherwise read sensors directly
+                for sensor in self.robot.hinge_pos_names:
+                    obs[sensor] = self.world.get_sensor(sensor)
+                for sensor in self.robot.ballquat_names:
+                    obs[sensor] = self.world.get_sensor(sensor)
+        if self.observe_remaining:
+            obs['remaining'] = np.array([self.steps / self.num_steps])
+            assert 0.0 <= obs['remaining'][0] <= 1.0, 'bad remaining {}'.format(obs['remaining'])
+        if self.walls_num and self.observe_walls:
+            obs['walls_lidar'] = self.obs_lidar(self.walls_pos, GROUP_WALL)
+        if self.observe_hazards:
+            obs['hazards_lidar'] = self.obs_lidar(self.hazards_pos, GROUP_HAZARD)
+        if self.observe_vases:
+            obs['vases_lidar'] = self.obs_lidar(self.vases_pos, GROUP_VASE)
+        if self.gremlins_num and self.observe_gremlins:
+            obs['gremlins_lidar'] = self.obs_lidar(self.gremlins_obj_pos, GROUP_GREMLIN)
+        if self.pillars_num and self.observe_pillars:
+            obs['pillars_lidar'] = self.obs_lidar(self.pillars_pos, GROUP_PILLAR)
+        if self.buttons_num and self.observe_buttons:
+            # Buttons observation is zero while buttons are resetting
+            if self.buttons_timer == 0:
+                obs['buttons_lidar'] = self.obs_lidar(self.buttons_pos, GROUP_BUTTON)
+            else:
+                obs['buttons_lidar'] = np.zeros(self.lidar_num_bins)
+        if self.observe_qpos:
+            obs['qpos'] = self.data.qpos.copy()
+        if self.observe_qvel:
+            obs['qvel'] = self.data.qvel.copy()
+        if self.observe_ctrl:
+            obs['ctrl'] = self.data.ctrl.copy()
+        if self.observe_vision:
+            obs['vision'] = self.obs_vision()
+        if self.observation_flatten:
+            flat_obs = np.zeros(self.obs_flat_size)
+            offset = 0
+            for k in sorted(self.obs_space_dict.keys()):
+                k_size = np.prod(obs[k].shape)
+                flat_obs[offset:offset + k_size] = obs[k].flat
+                offset += k_size
+            obs = flat_obs
+
+        obs = obs.astype(np.float32)
+        assert self.observation_space.contains(obs), f'Bad obs {obs} {self.observation_space}'
+        return obs
+
+
+    def cost(self):
+        ''' Calculate the current costs and return a dict '''
+        self.sim.forward()  # Ensure positions and contacts are correct
+        cost = {}
+        # Conctacts processing
+        if self.constrain_vases:
+            cost['cost_vases_contact'] = 0
+        if self.constrain_pillars:
+            cost['cost_pillars'] = 0
+        if self.constrain_buttons:
+            cost['cost_buttons'] = 0
+        if self.constrain_gremlins:
+            cost['cost_gremlins'] = 0
+        buttons_constraints_active = self.constrain_buttons and (self.buttons_timer == 0)
+        for contact in self.data.contact[:self.data.ncon]:
+            geom_ids = [contact.geom1, contact.geom2]
+            geom_names = sorted([self.model.geom_id2name(g) for g in geom_ids])
+            if self.constrain_vases and any(n.startswith('vase') for n in geom_names):
+                if any(n in self.robot.geom_names for n in geom_names):
+                    cost['cost_vases_contact'] += self.vases_contact_cost
+            if self.constrain_pillars and any(n.startswith('pillar') for n in geom_names):
+                if any(n in self.robot.geom_names for n in geom_names):
+                    cost['cost_pillars'] += self.pillars_cost
+            if buttons_constraints_active and any(n.startswith('button') for n in geom_names):
+                if any(n in self.robot.geom_names for n in geom_names):
+                    if not any(n == f'button{self.goal_button}' for n in geom_names):
+                        cost['cost_buttons'] += self.buttons_cost
+            if self.constrain_gremlins and any(n.startswith('gremlin') for n in geom_names):
+                if any(n in self.robot.geom_names for n in geom_names):
+                    cost['cost_gremlins'] += self.gremlins_contact_cost
+
+        # Displacement processing
+        if self.constrain_vases and self.vases_displace_cost:
+            cost['cost_vases_displace'] = 0
+            for i in range(self.num_objects_in_layout("vase", self.layout)):
+                name = f'vase{i}'
+                dist = np.sqrt(np.sum(np.square(self.data.get_body_xpos(name)[:2] - self.reset_layout[name])))
+                if dist > self.vases_displace_threshold:
+                    cost['cost_vases_displace'] += dist * self.vases_displace_cost
+
+        # Velocity processing
+        if self.constrain_vases and self.vases_velocity_cost:
+            # TODO: penalize rotational velocity too, but requires another cost coefficient
+            cost['cost_vases_velocity'] = 0
+            for i in range(self.num_objects_in_layout("vase", self.layout)):
+                name = f'vase{i}'
+                vel = np.sqrt(np.sum(np.square(self.data.get_body_xvelp(name))))
+                if vel >= self.vases_velocity_threshold:
+                    cost['cost_vases_velocity'] += vel * self.vases_velocity_cost
+
+        # Calculate constraint violations
+        if self.constrain_hazards:
+            cost['cost_hazards'] = 0
+            for h_pos in self.hazards_pos:
+                h_dist = self.dist_xy(h_pos)
+                if h_dist <= self.hazards_size:
+                    cost['cost_hazards'] += self.hazards_cost * (self.hazards_size - h_dist)
+
+        # Sum all costs into single total cost
+        cost['cost'] = sum(v for k, v in cost.items() if k.startswith('cost_'))
+
+        # Optionally remove shaping from reward functions.
+        if self.constrain_indicator:
+            for k in list(cost.keys()):
+                cost[k] = float(cost[k] > 0.0)  # Indicator function
+
+        self._cost = cost
+
+        return cost
+
+    def goal_met(self):
+        ''' Return true if the current goal is met this step '''
+        if self.task == 'goal':
+            return self.dist_goal() <= self.goal_size
+        if self.task == 'push':
+            return self.dist_box_goal() <= self.goal_size
+        if self.task == 'button':
+            for contact in self.data.contact[:self.data.ncon]:
+                geom_ids = [contact.geom1, contact.geom2]
+                geom_names = sorted([self.model.geom_id2name(g) for g in geom_ids])
+                if any(n == f'button{self.goal_button}' for n in geom_names):
+                    if any(n in self.robot.geom_names for n in geom_names):
+                        return True
+            return False
+        if self.task in ['x', 'z', 'circle', 'none', 'cleanup', 'cleanup_all']:
+            return False
+        raise ValueError(f'Invalid task {self.task}')
+
+    def set_mocaps(self):
+        ''' Set mocap object positions before a physics step is executed '''
+        if self.gremlins_num: # self.constrain_gremlins:
+            phase = float(self.data.time)
+            for i in range(self.gremlins_num):
+                name = f'gremlin{i}'
+                target = np.array([np.sin(phase), np.cos(phase)]) * self.gremlins_travel
+                pos = np.r_[target, [self.gremlins_size]]
+                self.data.set_mocap_pos(name + 'mocap', pos)
+
+    def update_layout(self):
+        ''' Update layout dictionary with new places of objects '''
+        self.sim.forward()
+        for k in list(self.layout.keys()):
+            # Mocap objects have to be handled separately
+            if 'gremlin' in k:
+                continue
+            self.layout[k] = self.data.get_body_xpos(k)[:2].copy()
+
+    def buttons_timer_tick(self):
+        ''' Tick the buttons resampling timer '''
+        self.buttons_timer = max(0, self.buttons_timer - 1)
+
+    def step(self, action):
+        ''' Take a step and return observation, reward, done, and info '''
+        action = np.array(action, copy=False)  # Cast to ndarray
+        assert not self.done, 'Environment must be reset before stepping'
+
+        info = {}
+
+        # Set action
+        action_range = self.model.actuator_ctrlrange
+        # action_scale = action_range[:,1] - action_range[:, 0]
+        self.data.ctrl[:] = np.clip(action, action_range[:,0], action_range[:,1]) #np.clip(action * 2 / action_scale, -1, 1)
+        if self.action_noise:
+            self.data.ctrl[:] += self.action_noise * self.rs.randn(self.model.nu)
+
+        # Simulate physics forward
+        exception = False
+        for _ in range(self.rs.binomial(self.frameskip_binom_n, self.frameskip_binom_p)):
+            try:
+                self.set_mocaps()
+                self.sim.step()  # Physics simulation step
+            except MujocoException as me:
+                print('MujocoException', me)
+                exception = True
+                break
+        if exception:
+            self.done = True
+            reward = self.reward_exception
+            info['cost_exception'] = 1.0
+        else:
+            self.sim.forward()  # Needed to get sensor readings correct!
+
+            # Reward processing
+            reward = self.reward()
+
+            # Constraint violations
+            info.update(self.cost())
+
+            # Button timer (used to delay button resampling)
+            self.buttons_timer_tick()
+
+            # Goal processing
+            if self.goal_met():
+                info['goal_met'] = True
+                reward += self.reward_goal
+                if self.continue_goal:
+                    # Update the internal layout so we can correctly resample (given objects have moved)
+                    self.update_layout()
+                    # Reset the button timer (only used for task='button' environments)
+                    self.buttons_timer = self.buttons_resampling_delay
+                    # Try to build a new goal, end if we fail
+                    if self.terminate_resample_failure:
+                        try:
+                            self.build_goal()
+                        except ResamplingError as e:
+                            # Normal end of episode
+                            self.done = True
+                    else:
+                        # Try to make a goal, which could raise a ResamplingError exception
+                        self.build_goal()
+                else:
+                    self.done = True
+
+        # Timeout
+        self.steps += 1
+        if self.steps >= self.num_steps:
+            self.done = True  # Maximum number of steps in an episode reached
+
+        return self.obs(), reward, self.done, info
+
+    def reward(self):
+        ''' Calculate the dense component of reward.  Call exactly once per step '''
+        reward = 0.0
+        # Distance from robot to goal
+        if self.task in ['goal', 'button']:
+            dist_goal = self.dist_goal()
+            reward += (self.last_dist_goal - dist_goal) * self.reward_distance
+            self.last_dist_goal = dist_goal
+
+        # distance of coloured blocks to respective goals
+        if self.task == 'cleanup':
+            dist_obj_goals = self.dist_obj_goals("sort")
+            reward += np.sum((np.array(self.last_dist_obj_goals) - np.array(dist_obj_goals)) * self.reward_distance)
+            self.last_dist_obj_goals = dist_obj_goals
+
+            # proportion of blocks in goal
+            task_completion = self.cleanup_task_completion("sort")
+            reward += task_completion * self.reward_task_completion
+            return reward
+
+        # distance of coloured blocks to respective goals for all tasks
+        if self.task == 'cleanup_all':
+            reward = dict()
+            for task in common.DOMAIN_TASK_IDS['cleanup_all']:
+                dist_obj_goals = self.dist_obj_goals(task)
+                task_reward = np.sum((np.array(self.last_dist_obj_goals[task]) - np.array(dist_obj_goals)) * self.reward_distance)
+                self.last_dist_obj_goals[task] = dist_obj_goals
+
+                # proportion of blocks in goal
+                task_completion = self.cleanup_task_completion(task)
+                task_reward += task_completion * self.reward_task_completion
+                reward[task] = task_reward
+            return reward
+
+        # Distance from robot to box
+        if self.task == 'push':
+            dist_box = self.dist_box()
+            gate_dist_box_reward = (self.last_dist_box > self.box_null_dist * self.box_size)
+            reward += (self.last_dist_box - dist_box) * self.reward_box_dist * gate_dist_box_reward
+            self.last_dist_box = dist_box
+        # Distance from box to goal
+        if self.task == 'push':
+            dist_box_goal = self.dist_box_goal()
+            reward += (self.last_box_goal - dist_box_goal) 
+            self.last_box_goal = dist_box_goal
+        # Used for forward locomotion tests
+        if self.task == 'x':
+            robot_com = self.world.robot_com()
+            reward += (robot_com[0] - self.last_robot_com[0]) * self.reward_x
+            self.last_robot_com = robot_com
+        # Used for jump up tests
+        if self.task == 'z':
+            robot_com = self.world.robot_com()
+            reward += (robot_com[2] - self.last_robot_com[2]) * self.reward_z
+            self.last_robot_com = robot_com
+        # Circle environment reward
+        if self.task == 'circle':
+            robot_com = self.world.robot_com()
+            robot_vel = self.world.robot_vel()
+            x, y, _ = robot_com
+            u, v, _ = robot_vel
+            radius = np.sqrt(x**2 + y**2)
+            reward += (((-u*y + v*x)/radius)/(1 + np.abs(radius - self.circle_radius))) * self.reward_circle
+        # Intrinsic reward for uprightness
+        if self.reward_orientation:
+            zalign = quat2zalign(self.data.get_body_xquat(self.reward_orientation_body))
+            reward += self.reward_orientation_scale * zalign
+        # Clip reward
+        if self.reward_clip:
+            in_range = reward < self.reward_clip and reward > -self.reward_clip
+            if not(in_range):
+                reward = np.clip(reward, -self.reward_clip, self.reward_clip)
+                print('Warning: reward was outside of range!')
+        return reward
+
+    def render_lidar(self, poses, color, offset, group):
+        ''' Render the lidar observation '''
+        robot_pos = self.world.robot_pos()
+        robot_mat = self.world.robot_mat()
+        lidar = self.obs_lidar(poses, group)
+        for i, sensor in enumerate(lidar):
+            if self.lidar_type == 'pseudo':
+                i += 0.5  # Offset to center of bin
+            theta = 2 * np.pi * i / self.lidar_num_bins
+            rad = self.render_lidar_radius
+            binpos = np.array([np.cos(theta) * rad, np.sin(theta) * rad, offset])
+            pos = robot_pos + np.matmul(binpos, robot_mat.transpose())
+            alpha = min(1, sensor + .1)
+            self.viewer.add_marker(pos=pos,
+                                   size=self.render_lidar_size * np.ones(3),
+                                   type=const.GEOM_SPHERE,
+                                   rgba=np.array(color) * alpha,
+                                   label='')
+
+    def render_compass(self, pose, color, offset):
+        ''' Render a compass observation '''
+        robot_pos = self.world.robot_pos()
+        robot_mat = self.world.robot_mat()
+        # Truncate the compass to only visualize XY component
+        compass = np.concatenate([self.obs_compass(pose)[:2] * 0.15, [offset]])
+        pos = robot_pos + np.matmul(compass, robot_mat.transpose())
+        self.viewer.add_marker(pos=pos,
+                               size=.05 * np.ones(3),
+                               type=const.GEOM_SPHERE,
+                               rgba=np.array(color) * 0.5,
+                               label='')
+
+    def render_area(self, pos, size, color, label='', alpha=0.1):
+        ''' Render a radial area in the environment '''
+        z_size = min(size, 0.3)
+        pos = np.asarray(pos)
+        if pos.shape == (2,):
+            pos = np.r_[pos, 0]  # Z coordinate 0
+        self.viewer.add_marker(pos=pos,
+                               size=[size, size, z_size],
+                               type=const.GEOM_CYLINDER,
+                               rgba=np.array(color) * alpha,
+                               label=label if self.render_labels else '')
+
+    def render_sphere(self, pos, size, color, label='', alpha=0.1):
+        ''' Render a radial area in the environment '''
+        pos = np.asarray(pos)
+        if pos.shape == (2,):
+            pos = np.r_[pos, 0]  # Z coordinate 0
+        self.viewer.add_marker(pos=pos,
+                               size=size * np.ones(3),
+                               type=const.GEOM_SPHERE,
+                               rgba=np.array(color) * alpha,
+                               label=label if self.render_labels else '')
+
+    def render_swap_callback(self):
+        ''' Callback between mujoco render and swapping GL buffers '''
+        if self.observe_vision and self.vision_render:
+            self.viewer.draw_pixels(self.save_obs_vision, 0, 0)
+
+    def render(self,
+               mode='human', 
+               camera_id=None,
+               width=DEFAULT_WIDTH,
+               height=DEFAULT_HEIGHT
+               ):
+        ''' Render the environment to the screen '''
+
+        if self.viewer is None or mode!=self._old_render_mode:
+            # Set camera if specified
+            if mode == 'human':
+                self.viewer = MjViewer(self.sim)
+                self.viewer.cam.fixedcamid = -1
+                self.viewer.cam.type = const.CAMERA_FREE
+            else:
+                self.viewer = MjRenderContextOffscreen(self.sim)
+                self.viewer._hide_overlay = True
+                self.viewer.cam.fixedcamid = camera_id #self.model.camera_name2id(mode)
+                self.viewer.cam.type = const.CAMERA_FIXED
+            self.viewer.render_swap_callback = self.render_swap_callback
+            # Turn all the geom groups on
+            self.viewer.vopt.geomgroup[:] = 1
+            self._old_render_mode = mode
+        self.viewer.update_sim(self.sim)
+
+        if camera_id is not None:
+            # Update camera if desired
+            self.viewer.cam.fixedcamid = camera_id
+
+        # Lidar markers
+        if self.render_lidar_markers:
+            offset = self.render_lidar_offset_init  # Height offset for successive lidar indicators
+            if 'box_lidar' in self.obs_space_dict or 'box_compass' in self.obs_space_dict:
+                if 'box_lidar' in self.obs_space_dict:
+                    self.render_lidar([self.box_pos], COLOR_BOX, offset, GROUP_BOX)
+                if 'box_compass' in self.obs_space_dict:
+                    self.render_compass(self.box_pos, COLOR_BOX, offset)
+                offset += self.render_lidar_offset_delta
+            if 'goal_lidar' in self.obs_space_dict or 'goal_compass' in self.obs_space_dict:
+                if 'goal_lidar' in self.obs_space_dict:
+                    self.render_lidar([self.goal_pos], COLOR_GOAL, offset, GROUP_GOAL)
+                if 'goal_compass' in self.obs_space_dict:
+                    self.render_compass(self.goal_pos, COLOR_GOAL, offset)
+                offset += self.render_lidar_offset_delta
+            if 'buttons_lidar' in self.obs_space_dict:
+                self.render_lidar(self.buttons_pos, COLOR_BUTTON, offset, GROUP_BUTTON)
+                offset += self.render_lidar_offset_delta
+            if 'circle_lidar' in self.obs_space_dict:
+                self.render_lidar([ORIGIN_COORDINATES], COLOR_CIRCLE, offset, GROUP_CIRCLE)
+                offset += self.render_lidar_offset_delta
+            if 'walls_lidar' in self.obs_space_dict:
+                self.render_lidar(self.walls_pos, COLOR_WALL, offset, GROUP_WALL)
+                offset += self.render_lidar_offset_delta
+            if 'hazards_lidar' in self.obs_space_dict:
+                self.render_lidar(self.hazards_pos, COLOR_HAZARD, offset, GROUP_HAZARD)
+                offset += self.render_lidar_offset_delta
+            if 'pillars_lidar' in self.obs_space_dict:
+                self.render_lidar(self.pillars_pos, COLOR_PILLAR, offset, GROUP_PILLAR)
+                offset += self.render_lidar_offset_delta
+            if 'gremlins_lidar' in self.obs_space_dict:
+                self.render_lidar(self.gremlins_obj_pos, COLOR_GREMLIN, offset, GROUP_GREMLIN)
+                offset += self.render_lidar_offset_delta
+            if 'vases_lidar' in self.obs_space_dict:
+                self.render_lidar(self.vases_pos, COLOR_VASE, offset, GROUP_VASE)
+                offset += self.render_lidar_offset_delta
+
+        # Add goal marker
+        if self.task == 'button':
+            self.render_area(self.goal_pos, self.buttons_size * 2, COLOR_BUTTON, 'goal', alpha=0.1)
+
+        # Add indicator for nonzero cost
+        # if self._cost.get('cost', 0) > 0:
+        #     self.render_sphere(self.world.robot_pos(), 0.25, COLOR_RED, alpha=.5)
+
+        # Draw vision pixels
+        if self.observe_vision and self.vision_render:
+            vision = self.obs_vision()
+            vision = np.array(vision * 255, dtype='uint8')
+            vision = Image.fromarray(vision).resize(self.vision_render_size)
+            vision = np.array(vision, dtype='uint8')
+            self.save_obs_vision = vision
+
+        if mode=='human':
+            self.viewer.render()
+            data = self.viewer.read_pixels(width, height, depth=False)
+            self.viewer._markers[:] = []
+            self.viewer._overlay.clear()
+            return data[::-1, :, :]
+        elif mode=='rgb_array':
+            self.viewer.render(width, height)
+            data = self.viewer.read_pixels(width, height, depth=False)
+            self.viewer._markers[:] = []
+            self.viewer._overlay.clear()
+            return data[::-1, :, :]
