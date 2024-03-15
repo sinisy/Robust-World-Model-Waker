@@ -708,3 +708,625 @@ class Engine(gym.Env, gym.utils.EzPickle):
         for _ in range(50000):
             if self.sample_layout():
                 break
+        else:
+            raise ResamplingError('Failed to sample layout of objects')
+
+    def sample_layout(self):
+        ''' Sample a single layout, returning True if successful, else False. '''
+
+        def placement_is_valid(xy, layout):
+            for other_name, other_xy in layout.items():
+                other_keepout = self.placements[other_name][1]
+                dist = np.sqrt(np.sum(np.square(xy - other_xy)))
+                if dist < other_keepout + self.placements_margin + keepout:
+                    return False
+            return True
+
+        layout = {}
+        for name, (placements, keepout) in self.placements.items():
+            conflicted = True
+            for _ in range(100):
+                xy = self.draw_placement(placements, keepout, self.placement_extent)
+                if placement_is_valid(xy, layout):
+                    conflicted = False
+                    break
+            if conflicted:
+                return False
+            layout[name] = xy
+        self.layout = layout
+        return True
+
+    def constrain_placement(self, placement, keepout):
+        ''' Helper function to constrain a single placement by the keepout radius '''
+        xmin, ymin, xmax, ymax = placement
+        return (xmin + keepout, ymin + keepout, xmax - keepout, ymax - keepout)
+
+    def draw_placement(self, placements, keepout, extent):
+        ''' 
+        Sample an (x,y) location, based on potential placement areas.
+
+        Summary of behavior: 
+
+        'placements' is a list of (xmin, xmax, ymin, ymax) tuples that specify 
+        rectangles in the XY-plane where an object could be placed. 
+
+        'keepout' describes how much space an object is required to have
+        around it, where that keepout space overlaps with the placement rectangle.
+
+        To sample an (x,y) pair, first randomly select which placement rectangle
+        to sample from, where the probability of a rectangle is weighted by its
+        area. If the rectangles are disjoint, there's an equal chance the (x,y) 
+        location will wind up anywhere in the placement space. If they overlap, then
+        overlap areas are double-counted and will have higher density. This allows
+        the user some flexibility in building placement distributions. Finally, 
+        randomly draw a uniform point within the selected rectangle.
+
+        '''
+        if placements is None:
+            choice = self.constrain_placement(extent, keepout)
+        else:
+            # Draw from placements according to placeable area
+            constrained = []
+            for placement in placements:
+                xmin, ymin, xmax, ymax = self.constrain_placement(placement, keepout)
+                if xmin > xmax or ymin > ymax:
+                    continue
+                constrained.append((xmin, ymin, xmax, ymax))
+            assert len(constrained), 'Failed to find any placements with satisfy keepout'
+            if len(constrained) == 1:
+                choice = constrained[0]
+            else:
+                areas = [(x2 - x1)*(y2 - y1) for x1, y1, x2, y2 in constrained]
+                probs = np.array(areas) / np.sum(areas)
+                choice = constrained[self.rs.choice(len(constrained), p=probs)]
+        xmin, ymin, xmax, ymax = choice
+        return np.array([self.rs.uniform(xmin, xmax), self.rs.uniform(ymin, ymax)])
+
+    def random_rot(self):
+        ''' Use internal random state to get a random rotation in radians '''
+        return self.rs.uniform(0, 2 * np.pi)
+    
+    def num_objects_in_layout(self, object_type, layout):
+        ''' Count the number of occurences of this type of object in the layout.'''
+        num = 0 
+        for obj_name in layout.keys():
+            if object_type in obj_name:
+                num += 1
+        return num
+
+    def build_world_config(self):
+        ''' Create a world_config from our own config '''
+        # TODO: parse into only the pieces we want/need
+        world_config = {}
+
+        world_config['robot_base'] = self.robot_base
+        world_config['robot_xy'] = self.layout['robot']
+        if self.robot_rot is None:
+            world_config['robot_rot'] = self.random_rot()
+        else:
+            world_config['robot_rot'] = float(self.robot_rot)
+
+        if self.floor_display_mode:
+            floor_size = max(self.placements_extents)
+            world_config['floor_size'] = [floor_size + .1, floor_size + .1, 1]
+
+        #if not self.observe_vision:
+        #    world_config['render_context'] = -1  # Hijack this so we don't create context
+        world_config['observe_vision'] = self.observe_vision
+
+        # Extra objects to add to the scene
+        world_config['objects'] = {}
+        vases_num = self.num_objects_in_layout("vase", self.layout)
+        if vases_num:
+            for i in range(vases_num):
+                name = f'vase{i}'
+                object = {'name': name,
+                          'size': np.ones(3) * self.vases_size,
+                          'type': 'box',
+                          'density': self.vases_density,
+                          'pos': np.r_[self.layout[name], self.vases_size - self.vases_sink],
+                          'rot': self.random_rot(),
+                          'group': GROUP_VASE,
+                          'rgba': COLOR_VASE}
+                world_config['objects'][name] = object
+
+        greenobjs_num = self.num_objects_in_layout("greenobj", self.layout)
+        if greenobjs_num:
+            for i in range(greenobjs_num):
+                name = f'greenobj{i}'
+                object = {'name': name,
+                          'size': np.ones(3) * self.greenobjs_size,
+                          'type': 'box',
+                          'density': self.vases_density,
+                          'pos': np.r_[self.layout[name], self.greenobjs_size - self.vases_sink],
+                          'rot': self.random_rot(),
+                          'group': GROUP_VASE,
+                          'rgba': COLOR_GREEN}
+                world_config['objects'][name] = object
+
+        blueobjs_num = self.num_objects_in_layout("blueobj", self.layout)
+        if blueobjs_num:
+            for i in range(blueobjs_num):
+                name = f'blueobj{i}'
+                object = {'name': name,
+                          'size': np.ones(3) * self.blueobjs_size,
+                          'type': 'box',
+                          'density': self.vases_density,
+                          'pos': np.r_[self.layout[name], self.blueobjs_size - self.vases_sink],
+                          'rot': self.random_rot(),
+                          'group': GROUP_VASE,
+                          'rgba': COLOR_BLUE}
+                world_config['objects'][name] = object
+
+        gremlins_num = self.num_objects_in_layout("gremlin", self.layout)
+        if gremlins_num:
+            self._gremlins_rots = dict()
+            for i in range(gremlins_num):
+                name = f'gremlin{i}obj'
+                self._gremlins_rots[i] = self.random_rot()
+                object = {'name': name,
+                          'size': np.ones(3) * self.gremlins_size,
+                          'type': 'box',
+                          'density': self.gremlins_density,
+                          'pos': np.r_[self.layout[name.replace('obj', '')], self.gremlins_size],
+                          'rot': self._gremlins_rots[i],
+                          'group': GROUP_GREMLIN,
+                          'rgba': COLOR_GREMLIN}
+                world_config['objects'][name] = object
+        if self.task == 'push':
+            object = {'name': 'box',
+                      'type': 'box',
+                      'size': np.ones(3) * self.box_size,
+                      'pos': np.r_[self.layout['box'], self.box_size],
+                      'rot': self.random_rot(),
+                      'density': self.box_density,
+                      'group': GROUP_BOX,
+                      'rgba': COLOR_BOX}
+            world_config['objects']['box'] = object
+
+        # Extra geoms (immovable objects) to add to the scene
+        world_config['geoms'] = {}
+        if self.task in ['goal', 'push']:
+            geom = {'name': 'goal',
+                    'size': [self.goal_size, self.goal_size / 2],
+                    'pos': np.r_[self.layout['goal'], self.goal_size / 2 + 1e-2],
+                    'rot': self.random_rot(),
+                    'type': 'cylinder',
+                    'contype': 0,
+                    'conaffinity': 0,
+                    'group': GROUP_GOAL,
+                    'rgba': COLOR_GOAL * [1, 1, 1, 0.25]}  # transparent
+            world_config['geoms']['goal'] = geom
+
+        if self.task in ['cleanup', 'cleanup_all']:
+            loc = self.left_goal_locs[self.arena]
+            geom = {'name': 'leftgoal',
+                    'size': [(loc[2] - loc[0])/2, (loc[3] - loc[1])/2, 0.04],
+                    'pos': [(loc[2] + loc[0])/2, (loc[3] + loc[1])/2, 0.02],
+                    'rot': 0,
+                    'type': 'box',
+                    'contype': 0,
+                    'conaffinity': 0,
+                    'group': GROUP_GOAL,
+                    'rgba': COLOR_GREEN * [1, 1, 1, 0.1]}  # transparent
+            world_config['geoms']['leftgoal'] = geom
+
+            loc = self.right_goal_locs[self.arena]
+            geom = {'name': 'rightgoal',
+                    'size': [(loc[2] - loc[0])/2, (loc[3] - loc[1])/2, 0.04],
+                    'pos': [(loc[2] + loc[0])/2, (loc[3] + loc[1])/2, 0.02],
+                    'rot': 0,
+                    'type': 'box',
+                    'contype': 0,
+                    'conaffinity': 0,
+                    'group': GROUP_GOAL,
+                    'rgba': COLOR_BLUE * [1, 1, 1, 0.1]}  # transparent
+            world_config['geoms']['rightgoal'] = geom
+
+        hazards_num = self.num_objects_in_layout("hazard", self.layout)
+        if hazards_num:
+            for i in range(hazards_num):
+                name = f'hazard{i}'
+                geom = {'name': name,
+                        'size': [self.hazards_size, 1e-2],#self.hazards_size / 2],
+                        'pos': np.r_[self.layout[name], 2e-2],#self.hazards_size / 2 + 1e-2],
+                        'rot': self.random_rot(),
+                        'type': 'cylinder',
+                        'contype': 0,
+                        'conaffinity': 0,
+                        'group': GROUP_HAZARD,
+                        'rgba': COLOR_HAZARD * [1, 1, 1, 1.0]} #0.1]}  # transparent
+                world_config['geoms'][name] = geom
+
+        pillars_num = self.num_objects_in_layout("pillar", self.layout)
+        if pillars_num:
+            for i in range(pillars_num):
+                name = f'pillar{i}'
+                geom = {'name': name,
+                        'size': [self.pillars_size, self.pillars_height],
+                        'pos': np.r_[self.layout[name], self.pillars_height],
+                        'rot': self.random_rot(),
+                        'type': 'cylinder',
+                        'group': GROUP_PILLAR,
+                        'rgba': COLOR_PILLAR}
+                world_config['geoms'][name] = geom
+
+        walls_num = self.num_objects_in_layout("wall", self.layout)
+        if self.sample_arenas:
+            wall_size = self.arena_sizes[self.arena]
+        else:
+            wall_size = self.walls_size
+        size = np.array([1, 1, 1]) * wall_size
+        size[2] = 0.15
+        if walls_num:
+            for i in range(walls_num):
+                name = f'wall{i}'
+                geom = {'name': name,
+                        'size': size,
+                        'pos': np.r_[self.layout[name], 0.1*wall_size],
+                        'rot': 0,
+                        'type': 'box',
+                        'group': GROUP_WALL,
+                        'rgba': COLOR_WALL}
+                world_config['geoms'][name] = geom
+
+        buttons_num = self.num_objects_in_layout("button", self.layout)
+        if buttons_num:
+            for i in range(buttons_num):
+                name = f'button{i}'
+                geom = {'name': name,
+                        'size': np.ones(3) * self.buttons_size,
+                        'pos': np.r_[self.layout[name], self.buttons_size],
+                        'rot': self.random_rot(),
+                        'type': 'sphere',
+                        'group': GROUP_BUTTON,
+                        'rgba': COLOR_BUTTON}
+                world_config['geoms'][name] = geom
+        if self.task == 'circle':
+            geom = {'name': 'circle',
+                    'size': np.array([self.circle_radius, 1e-2]),
+                    'pos': np.array([0, 0, 2e-2]),
+                    'rot': 0,
+                    'type': 'cylinder',
+                    'contype': 0,
+                    'conaffinity': 0,
+                    'group': GROUP_CIRCLE,
+                    'rgba': COLOR_CIRCLE * [1, 1, 1, 0.1]}
+            world_config['geoms']['circle'] = geom
+
+
+        # Extra mocap bodies used for control (equality to object of same name)
+        world_config['mocaps'] = {}
+        gremlins_num = self.num_objects_in_layout("gremlin", self.layout)
+        if gremlins_num:
+            for i in range(gremlins_num):
+                name = f'gremlin{i}mocap'
+                mocap = {'name': name,
+                         'size': np.ones(3) * self.gremlins_size,
+                         'type': 'box',
+                         'pos': np.r_[self.layout[name.replace('mocap', '')], self.gremlins_size],
+                         'rot': self._gremlins_rots[i],
+                         'group': GROUP_GREMLIN,
+                         'rgba': np.array([1, 1, 1, .1]) * COLOR_GREMLIN}
+                         #'rgba': np.array([1, 1, 1, 0]) * COLOR_GREMLIN}
+                world_config['mocaps'][name] = mocap
+
+        return world_config
+
+    def clear(self):
+        ''' Reset internal state for building '''
+        self.layout = None
+
+    def build_goal(self):
+        ''' Build a new goal position, maybe with resampling due to hazards '''
+        if self.task == 'goal':
+            self.build_goal_position()
+            self.last_dist_goal = self.dist_goal()
+        elif self.task == 'push':
+            self.build_goal_position()
+            self.last_dist_goal = self.dist_goal()
+            self.last_dist_box = self.dist_box()
+            self.last_box_goal = self.dist_box_goal()
+        elif self.task == 'button':
+            assert self.buttons_num > 0, 'Must have at least one button'
+            self.build_goal_button()
+            self.last_dist_goal = self.dist_goal()
+        elif self.task in ['x', 'z']:
+            self.last_robot_com = self.world.robot_com()
+        elif self.task in ["cleanup"]:
+            self.last_dist_obj_goals = self.dist_obj_goals()
+        elif self.task in ["cleanup_all"]:
+            self.last_dist_obj_goals = {
+                task: self.dist_obj_goals(task) for task in common.DOMAIN_TASK_IDS["cleanup_all"]
+            }
+        elif self.task in ['circle', 'none']:
+            pass
+        else:
+            raise ValueError(f'Invalid task {self.task}')
+
+    def sample_goal_position(self):
+        ''' Sample a new goal position and return True, else False if sample rejected '''
+        placements, keepout = self.placements['goal']
+        goal_xy = self.draw_placement(placements, keepout)
+        for other_name, other_xy in self.layout.items():
+            other_keepout = self.placements[other_name][1]
+            dist = np.sqrt(np.sum(np.square(goal_xy - other_xy)))
+            if dist < other_keepout + self.placements_margin + keepout:
+                return False
+        self.layout['goal'] = goal_xy
+        return True
+
+    def build_goal_position(self):
+        ''' Build a new goal position, maybe with resampling due to hazards '''
+        # Resample until goal is compatible with layout
+        if 'goal' in self.layout:
+            return
+        for _ in range(10000):  # Retries
+            if self.sample_goal_position():
+                break
+        else:
+            raise ResamplingError('Failed to generate goal')
+        # Move goal geom to new layout position
+        self.world_config_dict['geoms']['goal']['pos'][:2] = self.layout['goal']
+        #self.world.rebuild(deepcopy(self.world_config_dict))
+        #self.update_viewer_sim = True
+        goal_body_id = self.sim.model.body_name2id('goal')
+        self.sim.model.body_pos[goal_body_id][:2] = self.layout['goal']
+        self.sim.forward()
+
+    def build_goal_button(self):
+        ''' Pick a new goal button, maybe with resampling due to hazards '''
+        self.goal_button = self.rs.choice(self.buttons_num)
+
+    def build(self, config_dict=None):
+        ''' Build a new physics simulation environment '''
+
+        # sample number of objects
+        self.build_placements_dict(config_dict)
+
+        # Sample object positions
+        self.build_layout()
+
+        # Build the underlying physics world
+        self.world_config_dict = self.build_world_config()
+
+        if self.world is None:
+            self.world = World(self.world_config_dict)
+            self.world.reset()
+            self.world.build()
+        else:
+            self.world.reset(build=False)
+            self.world.rebuild(self.world_config_dict, state=False)
+        # Redo a small amount of work, and setup initial goal state
+        self.build_goal()
+
+        # Save last action
+        self.last_action = np.zeros(self.action_space.shape)
+
+        # Save last subtree center of mass
+        self.last_subtreecom = self.world.get_sensor('subtreecom')
+
+    def reset(self):
+        ''' Reset the physics simulation and return observation '''
+        self._seed += 1  # Increment seed
+        self.rs = np.random.RandomState(self._seed)
+        self.done = False
+        self.steps = 0  # Count of steps taken in this episode
+        # Set the button timer to zero (so button is immediately visible)
+        self.buttons_timer = 0
+
+        self.clear()
+        self.build()
+        # Save the layout at reset
+        self.reset_layout = deepcopy(self.layout)
+
+        cost = self.cost()
+        assert cost['cost'] == 0, f'World has starting cost! {cost}'
+
+        # Reset stateful parts of the environment
+        self.first_reset = False  # Built our first world successfully
+
+        # Return an observation
+        return self.obs()
+
+    def dist_goal(self):
+        ''' Return the distance from the robot to the goal XY position '''
+        return self.dist_xy(self.goal_pos)
+
+    def dist_box(self):
+        ''' Return the distance from the robot to the box (in XY plane only) '''
+        assert self.task == 'push', f'invalid task {self.task}'
+        return np.sqrt(np.sum(np.square(self.box_pos - self.world.robot_pos())))
+    
+    def get_desired_goals(self, task):
+        ''' Returns the desired goal locations for each object based on the task '''
+        if task == "sort":
+            return {"green": "left", "blue": "right"}
+        elif task == "sort-reversed":
+            return {"green": "right", "blue": "left"}
+        elif task == "push":
+            return {"green": "right", "blue": "right"}
+        else:
+            raise NotImplementedError
+
+    def dist_obj_goals(self, task="sort"):
+        ''' Returns the distance of each object to its goal location in the x-direction'''
+        dists = []
+        desired_goals = self.get_desired_goals(task)
+
+        if desired_goals["green"] == "left":
+            green_goal_pos = self.leftgoal_pos
+        else:
+            green_goal_pos = self.rightgoal_pos
+        if desired_goals["blue"] == "left":
+            blue_goal_pos = self.leftgoal_pos
+        else:
+            blue_goal_pos = self.rightgoal_pos
+
+        for green_obj_pos in self.greenobjs_pos:
+            xdist = np.abs(green_obj_pos[0] - green_goal_pos[0])
+            dists.append(xdist)
+
+        for blue_obj_pos in self.blueobjs_pos:
+            xdist = np.abs(blue_obj_pos[0] - blue_goal_pos[0])
+            dists.append(xdist)
+        return dists
+
+    def cleanup_task_completion(self, task="sort"):
+        ''' Returns whether the proportion of the cleanup task completed '''
+        total = self.num_objects_in_layout("blueobj", self.layout)
+        total += self.num_objects_in_layout("greenobj", self.layout)
+
+        # if there are no objects to clean up
+        if total == 0:
+            return 1
+        
+        # set the goal location according to cleanup task
+        desired_goals = self.get_desired_goals(task)
+        if desired_goals["green"] == "left":
+            green_goal_loc = self.left_goal_locs[self.arena]
+        else:
+            green_goal_loc = self.right_goal_locs[self.arena]
+        if desired_goals["blue"] == "left":
+            blue_goal_loc = self.left_goal_locs[self.arena]
+        else:
+            blue_goal_loc = self.right_goal_locs[self.arena]
+
+        # complete if within goal
+        complete = 0
+        for green_obj_pos in self.greenobjs_pos:
+            if (green_obj_pos[0] > green_goal_loc[0]) and (green_obj_pos[0] < green_goal_loc[2]) \
+                and (green_obj_pos[1] > green_goal_loc[1]) and (green_obj_pos[1] < green_goal_loc[3]):
+                complete += 1
+
+        for blue_obj_pos in self.blueobjs_pos:
+            if (blue_obj_pos[0] > blue_goal_loc[0]) and (blue_obj_pos[0] < blue_goal_loc[2]) \
+                and (blue_obj_pos[1] > blue_goal_loc[1]) and (blue_obj_pos[1] < blue_goal_loc[3]):
+                complete += 1
+
+        return complete/total
+
+    def dist_box_goal(self):
+        ''' Return the distance from the box to the goal XY position '''
+        assert self.task == 'push', f'invalid task {self.task}'
+        return np.sqrt(np.sum(np.square(self.box_pos - self.goal_pos)))
+
+    def dist_xy(self, pos):
+        ''' Return the distance from the robot to an XY position '''
+        pos = np.asarray(pos)
+        if pos.shape == (3,):
+            pos = pos[:2]
+        robot_pos = self.world.robot_pos()
+        return np.sqrt(np.sum(np.square(pos - robot_pos[:2])))
+
+    def world_xy(self, pos):
+        ''' Return the world XY vector to a position from the robot '''
+        assert pos.shape == (2,)
+        return pos - self.world.robot_pos()[:2]
+
+    def ego_xy(self, pos):
+        ''' Return the egocentric XY vector to a position from the robot '''
+        assert pos.shape == (2,), f'Bad pos {pos}'
+        robot_3vec = self.world.robot_pos()
+        robot_mat = self.world.robot_mat()
+        pos_3vec = np.concatenate([pos, [0]])  # Add a zero z-coordinate
+        world_3vec = pos_3vec - robot_3vec
+        return np.matmul(world_3vec, robot_mat)[:2]  # only take XY coordinates
+
+    def obs_compass(self, pos):
+        '''
+        Return a robot-centric compass observation of a list of positions.
+
+        Compass is a normalized (unit-lenght) egocentric XY vector,
+        from the agent to the object.
+
+        This is equivalent to observing the egocentric XY angle to the target,
+        projected into the sin/cos space we use for joints.
+        (See comment on joint observation for why we do this.)
+        '''
+        pos = np.asarray(pos)
+        if pos.shape == (2,):
+            pos = np.concatenate([pos, [0]])  # Add a zero z-coordinate
+        # Get ego vector in world frame
+        vec = pos - self.world.robot_pos()
+        # Rotate into frame
+        vec = np.matmul(vec, self.world.robot_mat())
+        # Truncate
+        vec = vec[:self.compass_shape]
+        # Normalize
+        vec /= np.sqrt(np.sum(np.square(vec))) + 0.001
+        assert vec.shape == (self.compass_shape,), f'Bad vec {vec}'
+        return vec
+
+    def obs_vision(self):
+        ''' Return pixels from the robot camera '''
+        # Get a render context so we can
+        rows, cols = self.vision_size
+        width, height = cols, rows
+        vision = self.sim.render(width, height, camera_name='vision', mode='offscreen')
+        return np.array(vision, dtype='float32') / 255
+
+    def obs_lidar(self, positions, group):
+        '''
+        Calculate and return a lidar observation.  See sub methods for implementation.
+        '''
+        if self.lidar_type == 'pseudo':
+            return self.obs_lidar_pseudo(positions)
+        elif self.lidar_type == 'natural':
+            return self.obs_lidar_natural(group)
+        else:
+            raise ValueError(f'Invalid lidar_type {self.lidar_type}')
+
+    def obs_lidar_natural(self, group):
+        '''
+        Natural lidar casts rays based on the ego-frame of the robot.
+        Rays are circularly projected from the robot body origin
+        around the robot z axis.
+        '''
+        body = self.model.body_name2id('robot')
+        grp = np.asarray([i == group for i in range(int(const.NGROUP))], dtype='uint8')
+        pos = np.asarray(self.world.robot_pos(), dtype='float64')
+        mat_t = self.world.robot_mat()
+        obs = np.zeros(self.lidar_num_bins)
+        for i in range(self.lidar_num_bins):
+            theta = (i / self.lidar_num_bins) * np.pi * 2
+            vec = np.matmul(mat_t, theta2vec(theta))  # Rotate from ego to world frame
+            vec = np.asarray(vec, dtype='float64')
+            dist, _ = self.sim.ray_fast_group(pos, vec, grp, 1, body)
+            if dist >= 0:
+                obs[i] = np.exp(-dist)
+        return obs
+
+    def obs_lidar_pseudo(self, positions):
+        '''
+        Return a robot-centric lidar observation of a list of positions.
+
+        Lidar is a set of bins around the robot (divided evenly in a circle).
+        The detection directions are exclusive and exhaustive for a full 360 view.
+        Each bin reads 0 if there are no objects in that direction.
+        If there are multiple objects, the distance to the closest one is used.
+        Otherwise the bin reads the fraction of the distance towards the robot.
+
+        E.g. if the object is 90% of lidar_max_dist away, the bin will read 0.1,
+        and if the object is 10% of lidar_max_dist away, the bin will read 0.9.
+        (The reading can be thought of as "closeness" or inverse distance)
+
+        This encoding has some desirable properties:
+            - bins read 0 when empty
+            - bins smoothly increase as objects get close
+            - maximum reading is 1.0 (where the object overlaps the robot)
+            - close objects occlude far objects
+            - constant size observation with variable numbers of objects
+        '''
+        obs = np.zeros(self.lidar_num_bins)
+        for pos in positions:
+            pos = np.asarray(pos)
+            if pos.shape == (3,):
+                pos = pos[:2]  # Truncate Z coordinate
+            z = complex(*self.ego_xy(pos))  # X, Y as real, imaginary components
+            dist = np.abs(z)
+            angle = np.angle(z) % (np.pi * 2)
+            bin_size = (np.pi * 2) / self.lidar_num_bins
+            bin = int(angle / bin_size)
+            bin_angle = bin_size * bin
+            if self.lidar_max_dist is None:
