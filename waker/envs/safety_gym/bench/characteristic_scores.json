@@ -40,4 +40,35 @@
         "Ret":	23.299
     },
     "doggogoal1":	{
-        "C
+        "Cost":	73.759,
+        "CostRate":	0.077,
+        "Ret":	50.193
+    },
+    "doggogoal2":	{
+        "Cost":	193.174,
+        "CostRate":	0.176,
+        "Ret":	38.103
+    },
+    "doggopush1":	{
+        "Cost":	29.958,
+        "CostRate":	0.049,
+        "Ret":	0.821
+    },
+    "doggopush2":	{
+        "Cost":	88.774,
+        "CostRate":	0.097,
+        "Ret":	1.193
+    },
+    "pointbutton1":	{
+        "Cost":	147.6,
+        "CostRate":	0.144,
+        "Ret":	24.715
+    },
+    "pointbutton2":	{
+        "Cost":	163.493,
+        "CostRate":	0.157,
+        "Ret":	23.885
+    },
+    "pointgoal1":	{
+        "Cost":	53.109,
+       
