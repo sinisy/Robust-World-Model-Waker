@@ -16,4 +16,12 @@ class TestEnvs(unittest.TestCase):
             _, _, done, _ = env.step(env.action_space.sample())
 
     def test_envs(self):
-        ''' Run a
+        ''' Run all the bench envs '''
+        for env_spec in gym.envs.registry.all():
+            if 'Safexp' in env_spec.id:
+                self.check_env(env_spec.id)
+
+
+
+if __name__ == '__main__':
+    unittest.main()
