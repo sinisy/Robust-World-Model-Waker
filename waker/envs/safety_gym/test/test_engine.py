@@ -42,4 +42,18 @@ class TestEngine(unittest.TestCase):
         p.step(p.action_space.high)
         p.step(p.action_space.high)
         p.step(p.action_space.low)
-        theta = p.data.get_joint_qpos('hip_1_z
+        theta = p.data.get_joint_qpos('hip_1_z')
+        dtheta = p.data.get_joint_qvel('hip_1_z')
+        print('theta', theta)
+        print('dtheta', dtheta)
+        print('sensordata', p.data.sensordata)
+        obs = p.obs()
+        print('obs', obs)
+        x, y = obs['jointpos_hip_1_z']
+        dz = obs['jointvel_hip_1_z']
+        # x, y components should be unit vector
+        self.assertAlmostEqual(np.sqrt(np.sum(np.square([x, y]))), 1.0)
+        # x, y components should be sin/cos theta
+        self.assertAlmostEqual(np.sin(theta), x)
+        self.assertAlmostEqual(np.cos(theta), y)
+        # dz sh
