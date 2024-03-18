@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+
+import unittest
+import gym
+import envs.safety_gym.envs  # noqa
+
+
+class TestEnvs(unittest.TestCase):
+    def check_env(self, env_name):
+        ''' Run a single environment for a single episode '''
+        print('running', env_name)
+        env = gym.make(env_name)
+        env.reset()
+        done = False
+        while not done:
+            _, _, done, _ = env.step(env.action_space.sample())
+
+    def test_envs(self):
+        ''' Run a

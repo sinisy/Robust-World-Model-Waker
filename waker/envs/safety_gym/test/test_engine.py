@@ -56,4 +56,9 @@ class TestEngine(unittest.TestCase):
         # x, y components should be sin/cos theta
         self.assertAlmostEqual(np.sin(theta), x)
         self.assertAlmostEqual(np.cos(theta), y)
-        # dz sh
+        # dz should be the same as dtheta
+        self.assertAlmostEqual(dz, dtheta)
+
+
+if __name__ == '__main__':
+    unittest.main()
