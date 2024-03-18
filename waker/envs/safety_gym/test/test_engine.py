@@ -28,4 +28,18 @@ class TestEngine(unittest.TestCase):
         self.assertTrue(p.observation_space.contains(obs))
 
         p = Engine({'observation_flatten': False})
-        obs = p.re
+        obs = p.reset()
+        self.assertIsInstance(p.observation_space, gym.spaces.Dict)
+        self.assertTrue(p.observation_space.contains(obs))
+
+    def test_angle_components(self):
+        ''' Test that the angle components are about correct '''
+        p = Engine({'robot_base': 'xmls/doggo.xml',
+                     'observation_flatten': False,
+                     'sensors_angle_components': True,
+                     'robot_rot': .3})
+        p.reset()
+        p.step(p.action_space.high)
+        p.step(p.action_space.high)
+        p.step(p.action_space.low)
+        theta = p.data.get_joint_qpos('hip_1_z
