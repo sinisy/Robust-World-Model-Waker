@@ -14,4 +14,18 @@ class TestEngine(unittest.TestCase):
         p.reset()
         for _ in range(10):
             self.assertFalse(p.done)
-            p.step(np.zeros(p.acti
+            p.step(np.zeros(p.action_space.shape))
+        self.assertTrue(p.done)
+        with self.assertRaises(AssertionError):
+            p.step(np.zeros(p.action_space.shape))
+
+    def test_flatten(self):
+        ''' Test that physics can flatten observations '''
+        p = Engine({'observation_flatten': True})
+        obs = p.reset()
+        self.assertIsInstance(p.observation_space, gym.spaces.Box)
+        self.assertEqual(len(p.observation_space.shape), 1)
+        self.assertTrue(p.observation_space.contains(obs))
+
+        p = Engine({'observation_flatten': False})
+        obs = p.re
