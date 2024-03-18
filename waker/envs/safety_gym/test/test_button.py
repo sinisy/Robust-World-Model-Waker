@@ -47,3 +47,15 @@ class TestButton(unittest.TestCase):
         config['buttons_resampling_delay'] = 10
         env = Engine(config)
         env.reset()
+        info = self.rollout_env(env, gets_goal=True)
+        self.assertEqual(info['cost_buttons'], 1.0)
+        # Wrong button is pressed, gets penalty
+        config['_seed'] = 1
+        env = Engine(config)
+        env.reset()
+        info = self.rollout_env(env)
+        self.assertEqual(info['cost_buttons'], 1.0)
+
+
+if __name__ == '__main__':
+    unittest.main()
