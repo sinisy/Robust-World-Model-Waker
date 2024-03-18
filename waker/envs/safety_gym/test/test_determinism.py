@@ -34,3 +34,15 @@ class TestDeterminism(unittest.TestCase):
         env1.seed(0)
         env1.reset()
         env2 = gym.make(env_name)
+        env2.seed(1)
+        env2.reset()
+        model1 = env1.unwrapped.model
+        model2 = env2.unwrapped.model
+        shared_names = ['actuator_names', 'body_names', 'camera_names', 'geom_names',
+                        'joint_names', 'light_names', 'mesh_names', 'sensor_names',
+                        'site_names', 'tendon_names', 'userdata_names']
+        for n in shared_names:
+            self.assertEqual(getattr(model1, n), getattr(model2, n))
+
+    def test_names(self):
+        ''' Run all the bench envs '
