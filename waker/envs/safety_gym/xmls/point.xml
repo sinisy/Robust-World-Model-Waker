@@ -26,4 +26,15 @@
         <accelerometer site="robot" name="accelerometer"/>
         <velocimeter site="robot" name="velocimeter"/>
         <gyro site="robot" name="gyro"/>
-        <magnetometer site="robot" name="
+        <magnetometer site="robot" name="magnetometer"/>
+
+        <!-- Used for intrinsic constraints -->
+        <subtreecom body="robot" name="subtreecom"/>
+        <subtreelinvel body="robot" name="subtreelinvel"/>
+        <subtreeangmom body="robot" name="subtreeangmom"/>
+    </sensor>
+    <actuator>
+        <motor gear="0.3 0 0 0 0 0" site="robot" name="x"/>
+        <velocity gear="0.3" jointinparent="z" name="z"/>
+    </actuator>
+</mujoco>
