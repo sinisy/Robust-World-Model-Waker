@@ -14,4 +14,16 @@
             <camera name="vision" pos="0 0 .15" xyaxes="0 -1 0 .4 0 1" fovy="90"/>
             <!-- <geom name="camera" pos="-.2 0 0" type="sphere" size=".05"/> -->
             <joint type="slide" axis="1 0 0" name="x" damping="0.01"/>
-            <joint type="slide
+            <joint type="slide" axis="0 1 0" name="y" damping="0.01"/>
+            <joint type="hinge" axis="0 0 1" name="z" damping="0.005"/>
+            <geom name="robot" type="sphere" size=".15" friction="1 0.01 0.01"/>
+            <geom name="pointarrow" pos="0.15 0 0" size="0.12" type="sphere" rgba="1 1 0 1"/>
+            <site name="robot" rgba="1 0 0 .1"/>
+        </body>
+    </worldbody>
+    <sensor>
+        <!-- Used for observation -->
+        <accelerometer site="robot" name="accelerometer"/>
+        <velocimeter site="robot" name="velocimeter"/>
+        <gyro site="robot" name="gyro"/>
+        <magnetometer site="robot" name="
