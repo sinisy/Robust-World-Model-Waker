@@ -35,3 +35,18 @@
     <sensor>
         <!--<jointvel joint="left" name="jointvel_left"/>
         <jointvel joint="right" name="jointvel_right"/>-->
+
+        <ballquat joint="rear" name="ballquat_rear"/>
+        <ballangvel joint="rear" name="ballangvel_rear"/>
+
+        <!-- Used for observation -->
+        <accelerometer site="robot" name="accelerometer"/>
+        <velocimeter site="robot" name="velocimeter"/>
+        <gyro site="robot" name="gyro"/>
+        <magnetometer site="robot" name="magnetometer"/>
+
+        <!-- Used for intrinsic constraints -->
+        <subtreecom body="robot" name="subtreecom"/>
+        <subtreelinvel body="robot" name="subtreelinvel"/>
+        <subtreeangmom body="robot" name="subtreeangmom"/>
+    </sensor>
