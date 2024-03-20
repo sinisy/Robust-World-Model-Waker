@@ -31,3 +31,19 @@ class TestGoal(unittest.TestCase):
         env = Engine(config)
         env.reset()
         self.assertEqual(env.steps, 0)
+        # Move the robot towards the goal
+        self.rollout_env(env)
+        # Check that the environment terminated early
+        self.assertLess(env.steps, 1000)
+
+        # Try again with the raise
+        config['terminate_resample_failure'] = False
+        env = Engine(config)
+        env.reset()
+        # Move the robot towards the goal, which should cause resampling failure
+        with self.assertRaises(ResamplingError):
+            self.rollout_env(env)
+
+
+if __name__ == '__main__':
+    unittest.main()
