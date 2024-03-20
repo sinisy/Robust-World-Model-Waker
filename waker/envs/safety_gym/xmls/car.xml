@@ -50,3 +50,8 @@
         <subtreelinvel body="robot" name="subtreelinvel"/>
         <subtreeangmom body="robot" name="subtreeangmom"/>
     </sensor>
+    <actuator>
+        <motor gear="1" jointinparent="left" name="left"/>
+        <motor gear="1" jointinparent="right" name="right"/>
+    </actuator>
+</mujoco>
