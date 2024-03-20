@@ -20,4 +20,18 @@
             <geom name="front_connector" type="box" pos="0 -.13 .04" size=".075 .03 .01"/>
             <body name="left" pos="-.1 .1 -.05">
                 <joint type="hinge" name="left" axis="1 0 0"/>
-                <geom type="cyli
+                <geom type="cylinder" name="left" fromto="-.065 0 0 -0.005 0 0"/>
+            </body>
+            <body name="right" pos=".1 .1 -.05">
+                <joint type="hinge" name="right" axis="1 0 0"/>
+                <geom type="cylinder" name="right" fromto="0.005 0 0 .065 0 0"/>
+            </body>
+            <body name="rear" pos="0 -.1 -.05">
+                <joint name="rear" type="ball"/>
+                <geom name="rear"/>
+            </body>
+        </body>
+    </worldbody>
+    <sensor>
+        <!--<jointvel joint="left" name="jointvel_left"/>
+        <jointvel joint="right" name="jointvel_right"/>-->
