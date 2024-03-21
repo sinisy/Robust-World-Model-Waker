@@ -50,4 +50,26 @@ class SafetyGymWrapper:
 
   @property
   def act_space(self):
-    return {self._act_key
+    return {self._act_key: self._env.action_space}
+  
+  def eval_cases(self, task):
+    return self._env.eval_cases
+
+  def step(self, action):
+    if not self._act_is_dict:
+      action = action[self._act_key]
+
+    if self._dict_reward:
+        reward = []
+    else:
+        reward = 0.0
+    for _ in range(self._action_repeat):
+      obs, rew, done, info = self._env.step(action)
+      if self._dict_reward:
+        curr_reward = list(rew.values())
+        if len(reward) == 0:
+          reward = curr_reward
+        else:
+          reward = [sum(x) for x in zip(reward, curr_reward)]
+      else:
+          reward += rew or 0.
