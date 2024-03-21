@@ -72,4 +72,24 @@ class SafetyGymWrapper:
         else:
           reward = [sum(x) for x in zip(reward, curr_reward)]
       else:
-          reward += rew or 0.
+          reward += rew or 0.0
+      if done:
+        break
+
+    if not isinstance(obs, dict):
+      obs = {self._obs_key: obs}
+    obs['reward'] = reward
+    obs['is_first'] = False
+    obs['is_last'] = done
+    obs['is_terminal'] = info.get('is_terminal', done)
+    obs['image'] = self.render()
+
+    if "task_completion" in info.keys():
+      obs["task_completion"] = info["task_completion"]
+    return obs
+  
+  def render(self):
+    img = self._env.render(camera_id=0,
+                          mode="rgb_array",
+                          height=self._size[0],
+                          width=self._size[
