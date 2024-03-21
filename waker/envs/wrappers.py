@@ -114,4 +114,13 @@ class SafetyGymWrapper:
   
 class CombinedEnvWrapper:
 
-  def __init__(self, s
+  def __init__(self, safety_gym_env, dmc_env, dmc_env_params=3, safety_gym_env_params=6):
+    self.safety_gym_env = safety_gym_env
+    self.dmc_env = dmc_env
+    self.dmc_env_params = dmc_env_params
+    self.safety_gym_env_params = safety_gym_env_params
+    self.aug_env_params = max(self.dmc_env_params, self.safety_gym_env_params) + 1
+
+    self.safety_gym_actions = int(self.safety_gym_env.act_space["action"].shape[0])
+    self.dmc_actions = int(self.dmc_env.act_space["action"].shape[0])
+    self.num_actions = max(self.safety_gym_actions, self.dmc_a
