@@ -92,4 +92,26 @@ class SafetyGymWrapper:
     img = self._env.render(camera_id=0,
                           mode="rgb_array",
                           height=self._size[0],
-                          width=self._size[
+                          width=self._size[1])
+    return img
+
+  def reset(self, env_params=None, task=None):
+    obs, info = self._env.reset(env_params=env_params)
+    if not isinstance(obs, dict):
+      obs = {self._obs_key: obs}
+    if self._dict_reward:
+      reward = [0.0 for _ in self._tasks]
+    else:
+      reward = 0.0
+    obs['reward'] = reward
+    obs['is_first'] = True
+    obs['is_last'] = False
+    obs['is_terminal'] = False
+    obs['image'] = self.render()
+    if "task_completion" in info.keys():
+      obs["task_completion"] = info["task_completion"]
+    return obs
+  
+class CombinedEnvWrapper:
+
+  def __init__(self, s
