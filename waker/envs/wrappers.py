@@ -181,4 +181,20 @@ class CombinedEnvWrapper:
     if np.isclose(self.domain_id, self.domain_id_map["safety_gym"]):
       self.current_env = self.safety_gym_env
     elif np.isclose(self.domain_id, self.domain_id_map["dmc"]):
-      self.current_env = self.dmc_
+      self.current_env = self.dmc_env
+    else:
+      raise ValueError("Domain ID not recognized.")
+
+    obs = self.current_env.reset(env_params=self.to_original_env_params(env_params))
+
+    if env_params is not None:
+      self.current_env_params = env_params
+    else:
+      self.current_env_params = self.to_aug_env_params(obs["env_params"])
+    
+    if "task_completion" not in obs.keys():
+      obs["task_completion"] = self.to_combined_task_completion()
+    else:
+      obs["task_completion"] = self.to_combined_task_completion(obs["task_completion"])
+
+    obs["env_param
