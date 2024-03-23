@@ -164,4 +164,21 @@ class CombinedEnvWrapper:
       elif task in self.safety_gym_tasks:
         self.domain_id = self.domain_id_map["safety_gym"]
       else:
-        raise ValueError("Task not recog
+        raise ValueError("Task not recognized.")
+
+    # else if env params set use that to env the domain
+    elif env_params is not None:
+      self.domain_id = env_params[0]
+
+    # otherwise choose randomly
+    else:
+      if np.random.uniform() < 0.5:
+        self.domain_id = self.domain_id_map["dmc"]
+      else:
+        self.domain_id = self.domain_id_map["safety_gym"]
+
+    # set the current env
+    if np.isclose(self.domain_id, self.domain_id_map["safety_gym"]):
+      self.current_env = self.safety_gym_env
+    elif np.isclose(self.domain_id, self.domain_id_map["dmc"]):
+      self.current_env = self.dmc_
