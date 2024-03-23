@@ -149,4 +149,19 @@ class CombinedEnvWrapper:
       self.safety_gym_eval_cases[new_key] = new_cases
 
   def eval_cases(self, task):
-    if task 
+    if task in self.dmc_tasks:
+      return self.dmc_eval_cases
+    elif task in self.safety_gym_tasks:
+      return self.safety_gym_eval_cases
+    else:
+      raise ValueError("Task not recognized.")
+
+  def reset(self, env_params=None, task=None):
+    # if the task is specified set domain appropriately
+    if task is not None:
+      if task in self.dmc_tasks:
+        self.domain_id = self.domain_id_map["dmc"]
+      elif task in self.safety_gym_tasks:
+        self.domain_id = self.domain_id_map["safety_gym"]
+      else:
+        raise ValueError("Task not recog
