@@ -137,4 +137,16 @@ class CombinedEnvWrapper:
     self.domain_id_map = {"dmc": 0.0, "safety_gym": 1.0}
 
     self.dmc_eval_cases = dict()
-    for key, ca
+    for key, cases in self.dmc_env.eval_cases(None).items():
+      new_key = "dmc_" + key
+      new_cases = [self.to_aug_env_params(case, self.domain_id_map["dmc"]) for case in cases]
+      self.dmc_eval_cases[new_key] = new_cases
+
+    self.safety_gym_eval_cases = dict()
+    for key, cases in self.safety_gym_env.eval_cases(None).items():
+      new_key = "safetygym_" + key
+      new_cases = [self.to_aug_env_params(case, self.domain_id_map["safety_gym"]) for case in cases]
+      self.safety_gym_eval_cases[new_key] = new_cases
+
+  def eval_cases(self, task):
+    if task 
