@@ -214,4 +214,19 @@ class CombinedEnvWrapper:
       new_env_params[0] = self.domain_id
     else:
       new_env_params[0] = domain_id
-    ne
+    new_env_params[1:(1 + original_params_size)] = original_env_params
+    return new_env_params
+  
+  def to_original_env_params(self, aug_env_params=None):
+    if aug_env_params is None:
+      return None
+    original_env_params = aug_env_params[1:]
+    if np.isclose(self.domain_id, self.domain_id_map["safety_gym"]):
+      original_env_params = original_env_params[:self.safety_gym_env_params]
+    else:
+      original_env_params = original_env_params[:self.dmc_env_params]
+    return original_env_params
+  
+  def step(self, action):
+    action = action.copy()
+    if self.current
