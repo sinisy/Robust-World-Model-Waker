@@ -197,4 +197,21 @@ class CombinedEnvWrapper:
     else:
       obs["task_completion"] = self.to_combined_task_completion(obs["task_completion"])
 
-    obs["env_param
+    obs["env_params"] = self.current_env_params.copy()
+    if "state" in obs.keys():
+      del obs["state"]
+    
+    obs["reward"] = np.zeros(len(self.combined_tasks))
+    obs_fin = {key: obs[key] for key in self.obs_keys}
+    return obs_fin
+  
+  def to_aug_env_params(self, original_env_params=None, domain_id=None):
+    if original_env_params is None:
+      return None
+    original_params_size = len(original_env_params)
+    new_env_params = np.zeros(self.aug_env_params)
+    if domain_id is None:
+      new_env_params[0] = self.domain_id
+    else:
+      new_env_params[0] = domain_id
+    ne
