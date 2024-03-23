@@ -123,4 +123,18 @@ class CombinedEnvWrapper:
 
     self.safety_gym_actions = int(self.safety_gym_env.act_space["action"].shape[0])
     self.dmc_actions = int(self.dmc_env.act_space["action"].shape[0])
-    self.num_actions = max(self.safety_gym_actions, self.dmc_a
+    self.num_actions = max(self.safety_gym_actions, self.dmc_actions)
+
+    self.dmc_tasks = self.dmc_env._tasks
+    self.safety_gym_tasks = self.safety_gym_env._tasks
+    self.name = self.dmc_env.name + "-" + self.safety_gym_env.name
+    self.combined_tasks = common.DOMAIN_TASK_IDS[self.name]
+
+    self.act_space = {"action": gym.spaces.Box(-1, 1, (self.num_actions,), dtype=np.float32)}
+    self.obs_space = self.safety_gym_env.obs_space
+
+    self.obs_keys = ["env_params", "image", "reward", "is_first", "is_last", "is_terminal", "task_completion"]
+    self.domain_id_map = {"dmc": 0.0, "safety_gym": 1.0}
+
+    self.dmc_eval_cases = dict()
+    for key, ca
