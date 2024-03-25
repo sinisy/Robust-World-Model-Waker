@@ -376,4 +376,23 @@ class DMC:
         'is_first': True,
         'is_last': False,
         'is_terminal': False,
-       
+        'image': self._env.physics.render(*self._size, camera_id=self._camera),
+    }
+    obs.update({
+        k: v for k, v in dict(time_step.observation).items()
+        if k not in self._ignored_keys})
+    return obs
+
+class Dummy:
+
+  def __init__(self):
+    pass
+
+  @property
+  def obs_space(self):
+    return {
+        'image': gym.spaces.Box(0, 255, (64, 64, 3), dtype=np.uint8),
+        'reward': gym.spaces.Box(-np.inf, np.inf, (), dtype=np.float32),
+        'is_first': gym.spaces.Box(0, 1, (), dtype=bool),
+        'is_last': gym.spaces.Box(0, 1, (), dtype=bool),
+        
