@@ -336,4 +336,24 @@ class DMC:
 
   def step(self, action):
     assert np.isfinite(action['action']).all(), action['action']
-    if self._
+    if self._dict_reward:
+        reward = []
+    else:
+        reward = 0.0
+    for _ in range(self._action_repeat):
+      time_step = self._env.step(action['action'])
+      if self._dict_reward:
+        curr_reward = list(time_step.reward.values())
+        if len(reward) == 0:
+          reward = curr_reward
+        else:
+          reward = [sum(x) for x in zip(reward, curr_reward)]
+      else:
+          reward += time_step.reward or 0.0
+      if time_step.last():
+        break
+    assert time_step.discount in (0, 1)
+    obs = {
+        'reward': reward,
+        'is_first': False,
+        'is_last'
