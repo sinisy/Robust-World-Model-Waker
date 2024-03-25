@@ -288,4 +288,19 @@ class DMC:
       from dm_control.locomotion.examples import basic_rodent_2020
       self._env = getattr(basic_rodent_2020, task)()
     else:
-      from envs.dm_control import sui
+      from envs.dm_control import suite
+      self._env = suite.load(domain, task)
+    self._action_repeat = action_repeat
+    self._size = size
+    if camera in (-1, None):
+      camera = dict(
+          quadruped_walk=2, quadruped_run=2, quadruped_escape=2,
+          quadruped_fetch=2, locom_rodent_maze_forage=1,
+          locom_rodent_two_touch=1,
+      ).get(name, 0)
+    self._camera = camera
+    self._ignored_keys = []
+    for key, value in self._env.observation_spec().items():
+      if value.shape == (0,):
+        print(f"Ignoring empty observation key '{key}'.")
+        self._ignored_keys.appen
