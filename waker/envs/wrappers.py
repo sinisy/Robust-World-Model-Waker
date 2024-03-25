@@ -246,4 +246,17 @@ class CombinedEnvWrapper:
     if "state" in obs.keys():
       del obs["state"]
     obs["reward"] = self.to_combined_reward(obs["reward"])
-    obs_fin = 
+    obs_fin = {key: obs[key] for key in self.obs_keys}
+    return obs_fin
+  
+  def to_combined_reward(self, env_reward):
+    combined_reward = np.zeros(len(self.combined_tasks))
+
+    for task in self.combined_tasks:
+      if task in self.dmc_tasks and self.current_env == self.dmc_env:
+        combined_reward[self.combined_tasks.index(task)] = env_reward[self.dmc_tasks.index(task)]
+      elif task in self.safety_gym_tasks and self.current_env == self.safety_gym_env:
+        combined_reward[self.combined_tasks.index(task)] = env_reward[self.safety_gym_tasks.index(task)]
+    return combined_reward
+  
+  def to_combined_task
