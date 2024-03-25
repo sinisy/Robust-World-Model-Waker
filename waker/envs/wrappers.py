@@ -259,4 +259,17 @@ class CombinedEnvWrapper:
         combined_reward[self.combined_tasks.index(task)] = env_reward[self.safety_gym_tasks.index(task)]
     return combined_reward
   
-  def to_combined_task
+  def to_combined_task_completion(self, task_completion=None):
+    combined_task_completion = np.zeros(len(self.combined_tasks))
+    if task_completion is None:
+      return combined_task_completion
+    
+    for task in self.combined_tasks:
+      if task in self.safety_gym_tasks and self.current_env == self.safety_gym_env:
+        combined_task_completion[self.combined_tasks.index(task)] = task_completion[self.safety_gym_tasks.index(task)]
+    return combined_task_completion
+
+class DMC:
+
+  def __init__(self, name, action_repeat=1, size=(64, 64), camera=None):
+    domain, task = name.spli
