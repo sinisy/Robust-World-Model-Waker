@@ -318,4 +318,22 @@ class DMC:
       if key in self._ignored_keys:
         continue
       if value.dtype == np.float64:
-        spaces[key] = gym.spa
+        spaces[key] = gym.spaces.Box(-np.inf, np.inf, value.shape, np.float32)
+      elif value.dtype == np.uint8:
+        spaces[key] = gym.spaces.Box(0, 255, value.shape, np.uint8)
+      else:
+        raise NotImplementedError(value.dtype)
+    return spaces
+  
+  def eval_cases(self, task):
+    return self._env.task.eval_cases
+
+  @property
+  def act_space(self):
+    spec = self._env.action_spec()
+    action = gym.spaces.Box(spec.minimum, spec.maximum, dtype=np.float32)
+    return {'action': action}
+
+  def step(self, action):
+    assert np.isfinite(action['action']).all(), action['action']
+    if self._
