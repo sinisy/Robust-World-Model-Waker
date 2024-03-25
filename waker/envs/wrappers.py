@@ -229,4 +229,21 @@ class CombinedEnvWrapper:
   
   def step(self, action):
     action = action.copy()
-    if self.current
+    if self.current_env == self.safety_gym_env:
+      action["action"] = action["action"][:self.safety_gym_actions]
+    else:
+      action["action"] = action["action"][:self.dmc_actions]
+
+    obs = self.current_env.step(action)
+
+    if "task_completion" not in obs.keys():
+      obs["task_completion"] = self.to_combined_task_completion()
+    else:
+      obs["task_completion"] = self.to_combined_task_completion(obs["task_completion"])
+
+    obs["env_params"] = self.current_env_params.copy()
+
+    if "state" in obs.keys():
+      del obs["state"]
+    obs["reward"] = self.to_combined_reward(obs["reward"])
+    obs_fin = 
