@@ -356,4 +356,24 @@ class DMC:
     obs = {
         'reward': reward,
         'is_first': False,
-        'is_last'
+        'is_last': time_step.last(),
+        'is_terminal': time_step.discount == 0,
+        'image': self._env.physics.render(*self._size, camera_id=self._camera),
+    }
+    obs.update({
+        k: v for k, v in dict(time_step.observation).items()
+        if k not in self._ignored_keys})
+    return obs
+
+  def reset(self, env_params=None, task=None):
+    time_step = self._env.reset(env_params)
+    if self._dict_reward:
+      reward = [0.0 for _ in self._tasks]
+    else:
+      reward = 0.0
+    obs = {
+        'reward': reward,
+        'is_first': True,
+        'is_last': False,
+        'is_terminal': False,
+       
