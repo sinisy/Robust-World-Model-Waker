@@ -303,4 +303,19 @@ class DMC:
     for key, value in self._env.observation_spec().items():
       if value.shape == (0,):
         print(f"Ignoring empty observation key '{key}'.")
-        self._ignored_keys.appen
+        self._ignored_keys.append(key)
+
+  @property
+  def obs_space(self):
+    spaces = {
+        'image': gym.spaces.Box(0, 255, self._size + (3,), dtype=np.uint8),
+        'reward': gym.spaces.Box(-np.inf, np.inf, (), dtype=np.float32),
+        'is_first': gym.spaces.Box(0, 1, (), dtype=bool),
+        'is_last': gym.spaces.Box(0, 1, (), dtype=bool),
+        'is_terminal': gym.spaces.Box(0, 1, (), dtype=bool),
+    }
+    for key, value in self._env.observation_spec().items():
+      if key in self._ignored_keys:
+        continue
+      if value.dtype == np.float64:
+        spaces[key] = gym.spa
