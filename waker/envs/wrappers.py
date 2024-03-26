@@ -395,4 +395,32 @@ class Dummy:
         'reward': gym.spaces.Box(-np.inf, np.inf, (), dtype=np.float32),
         'is_first': gym.spaces.Box(0, 1, (), dtype=bool),
         'is_last': gym.spaces.Box(0, 1, (), dtype=bool),
-        
+        'is_terminal': gym.spaces.Box(0, 1, (), dtype=bool),
+    }
+
+  @property
+  def act_space(self):
+    return {'action': gym.spaces.Box(-1, 1, (6,), dtype=np.float32)}
+
+  def step(self, action):
+    return {
+        'image': np.zeros((64, 64, 3)),
+        'reward': 0.0,
+        'is_first': False,
+        'is_last': False,
+        'is_terminal': False,
+    }
+
+  def reset(self):
+    return {
+        'image': np.zeros((64, 64, 3)),
+        'reward': 0.0,
+        'is_first': True,
+        'is_last': False,
+        'is_terminal': False,
+    }
+
+
+class TimeLimit:
+
+  def __init_
