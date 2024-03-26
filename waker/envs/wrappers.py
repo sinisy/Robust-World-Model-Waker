@@ -445,4 +445,25 @@ class TimeLimit:
       self._step = None
     return obs
 
-  def reset(self, env_params
+  def reset(self, env_params=None, task=None):
+    self._step = 0
+    return self._env.reset(env_params=env_params, task=task)
+
+
+class NormalizeAction:
+
+  def __init__(self, env, key='action'):
+    self._env = env
+    self._key = key
+    space = env.act_space[key]
+    self._mask = np.isfinite(space.low) & np.isfinite(space.high)
+    self._low = np.where(self._mask, space.low, -1)
+    self._high = np.where(self._mask, space.high, 1)
+
+  def __getattr__(self, name):
+    if name.startswith('__'):
+      raise AttributeError(name)
+    try:
+      return getattr(self._env, name)
+    except AttributeError:
+      raise Val
