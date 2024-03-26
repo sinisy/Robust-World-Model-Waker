@@ -423,4 +423,26 @@ class Dummy:
 
 class TimeLimit:
 
-  def __init_
+  def __init__(self, env, duration):
+    self._env = env
+    self._duration = duration
+    self._step = None
+
+  def __getattr__(self, name):
+    if name.startswith('__'):
+      raise AttributeError(name)
+    try:
+      return getattr(self._env, name)
+    except AttributeError:
+      raise ValueError(name)
+
+  def step(self, action):
+    assert self._step is not None, 'Must reset environment.'
+    obs = self._env.step(action)
+    self._step += 1
+    if self._duration and self._step >= self._duration:
+      obs['is_last'] = True
+      self._step = None
+    return obs
+
+  def reset(self, env_params
