@@ -484,4 +484,23 @@ class NormalizeAction:
 class OneHotAction:
 
   def __init__(self, env, key='action'):
-    assert hasatt
+    assert hasattr(env.act_space[key], 'n')
+    self._env = env
+    self._key = key
+    self._random = np.random.RandomState()
+
+  def __getattr__(self, name):
+    if name.startswith('__'):
+      raise AttributeError(name)
+    try:
+      return getattr(self._env, name)
+    except AttributeError:
+      raise ValueError(name)
+
+  @property
+  def act_space(self):
+    shape = (self._env.act_space[self._key].n,)
+    space = gym.spaces.Box(low=0, high=1, shape=shape, dtype=np.float32)
+    space.sample = self._sample_action
+    space.n = shape[0]
+    return {**self._env.act_space, self._
