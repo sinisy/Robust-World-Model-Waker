@@ -466,4 +466,22 @@ class NormalizeAction:
     try:
       return getattr(self._env, name)
     except AttributeError:
-      raise Val
+      raise ValueError(name)
+
+  @property
+  def act_space(self):
+    low = np.where(self._mask, -np.ones_like(self._low), self._low)
+    high = np.where(self._mask, np.ones_like(self._low), self._high)
+    space = gym.spaces.Box(low, high, dtype=np.float32)
+    return {**self._env.act_space, self._key: space}
+
+  def step(self, action):
+    orig = (action[self._key] + 1) / 2 * (self._high - self._low) + self._low
+    orig = np.where(self._mask, orig, action[self._key])
+    return self._env.step({**action, self._key: orig})
+
+
+class OneHotAction:
+
+  def __init__(self, env, key='action'):
+    assert hasatt
