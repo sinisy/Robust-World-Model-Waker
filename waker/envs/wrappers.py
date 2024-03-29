@@ -524,4 +524,27 @@ class OneHotAction:
     return reference
 
 
-class Re
+class ResizeImage:
+
+  def __init__(self, env, size=(64, 64)):
+    self._env = env
+    self._size = size
+    self._keys = [
+        k for k, v in env.obs_space.items()
+        if len(v.shape) > 1 and v.shape[:2] != size]
+    print(f'Resizing keys {",".join(self._keys)} to {self._size}.')
+    if self._keys:
+      from PIL import Image
+      self._Image = Image
+
+  def __getattr__(self, name):
+    if name.startswith('__'):
+      raise AttributeError(name)
+    try:
+      return getattr(self._env, name)
+    except AttributeError:
+      raise ValueError(name)
+
+  @property
+  def obs_space(self):
+    spaces = 
