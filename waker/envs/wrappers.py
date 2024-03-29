@@ -547,4 +547,24 @@ class ResizeImage:
 
   @property
   def obs_space(self):
-    spaces = 
+    spaces = self._env.obs_space
+    for key in self._keys:
+      shape = self._size + spaces[key].shape[2:]
+      spaces[key] = gym.spaces.Box(0, 255, shape, np.uint8)
+    return spaces
+
+  def step(self, action):
+    obs = self._env.step(action)
+    for key in self._keys:
+      obs[key] = self._resize(obs[key])
+    return obs
+
+  def reset(self):
+    obs = self._env.reset()
+    for key in self._keys:
+      obs[key] = self._resize(obs[key])
+    return obs
+
+  def _resize(self, image):
+    image = self._Image.fromarray(image)
+    image = image.resize(self._size, self._Image.N
