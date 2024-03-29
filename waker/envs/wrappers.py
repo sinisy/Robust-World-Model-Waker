@@ -567,4 +567,32 @@ class ResizeImage:
 
   def _resize(self, image):
     image = self._Image.fromarray(image)
-    image = image.resize(self._size, self._Image.N
+    image = image.resize(self._size, self._Image.NEAREST)
+    image = np.array(image)
+    return image
+
+
+class RenderImage:
+
+  def __init__(self, env, key='image'):
+    self._env = env
+    self._key = key
+    self._shape = self._env.render().shape
+
+  def __getattr__(self, name):
+    if name.startswith('__'):
+      raise AttributeError(name)
+    try:
+      return getattr(self._env, name)
+    except AttributeError:
+      raise ValueError(name)
+
+  @property
+  def obs_space(self):
+    spaces = self._env.obs_space
+    spaces[self._key] = gym.spaces.Box(0, 255, self._shape, np.uint8)
+    return spaces
+
+  def step(self, action):
+    obs = self._env.step(action)
+    
