@@ -663,4 +663,26 @@ class Async:
   def step(self, action, blocking=False):
     promise = self.call('step', action)
     if blocking:
-      return pro
+      return promise()
+    else:
+      return promise
+
+  def reset(self, blocking=False):
+    promise = self.call('reset')
+    if blocking:
+      return promise()
+    else:
+      return promise
+
+  def _receive(self):
+    try:
+      message, payload = self._conn.recv()
+    except (OSError, EOFError):
+      raise RuntimeError('Lost connection to environment worker.')
+    # Re-raise exceptions in the main process.
+    if message == self._EXCEPTION:
+      stacktrace = payload
+      raise Exception(stacktrace)
+    if message == self._RESULT:
+      return payload
+    raise KeyError('Received message
