@@ -619,4 +619,26 @@ class Async:
       import multiprocessing as mp
       context = mp.get_context('spawn')
     elif strategy == 'thread':
-      import
+      import multiprocessing.dummy as context
+    else:
+      raise NotImplementedError(strategy)
+    self._strategy = strategy
+    self._conn, conn = context.Pipe()
+    self._process = context.Process(target=self._worker, args=(conn,))
+    atexit.register(self.close)
+    self._process.start()
+    self._receive()  # Ready.
+    self._obs_space = None
+    self._act_space = None
+
+  def access(self, name):
+    self._conn.send((self._ACCESS, name))
+    return self._receive
+
+  def call(self, name, *args, **kwargs):
+    payload = name, args, kwargs
+    self._conn.send((self._CALL, payload))
+    return self._receive
+
+  def close(self):
+    t
