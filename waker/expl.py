@@ -46,4 +46,22 @@ class RandomExplore(common.Module):
     if self.config.rssm.discrete:
       stoch = tf.reshape(
           stoch, stoch.shape[:-2] + (stoch.shape[-2] * stoch.shape[-1]))
-    ta
+    target = {
+        'embed': context['embed'],
+        'stoch': stoch,
+        'deter': start['deter'],
+        'feat': context['feat'],
+    }[self.config.disag_target]
+    inputs = context['feat']
+    if self.config.disag_action_cond:
+      action = tf.cast(data['action'], inputs.dtype)
+      inputs = tf.concat([inputs, action], -1)
+    expl_metrics, training_seq = self.wm_sequence(
+        self.wm, start, data['is_terminal'], self._intr_reward)
+    ens_mets = self._train_ensemble(inputs, target)
+    metrics.update(ens_mets)
+    metrics.update(expl_metrics)
+    return None, metrics, training_seq
+  
+  @tf.function
+  def wm_s
