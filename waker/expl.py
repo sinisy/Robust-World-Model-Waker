@@ -30,4 +30,20 @@ class RandomExplore(common.Module):
     self.opt = common.Optimizer('expl', **config.expl_opt)
     self.extr_rewnorm = common.StreamNorm(**self.config.expl_reward_norm)
     self.intr_rewnorm = common.StreamNorm(**self.config.expl_reward_norm)
-    s
+    self.rewnorm = common.StreamNorm(**self.config.reward_norm)
+
+  def random_actor(self, feat):
+    shape = feat.shape[:-1] + self.act_space.shape
+    if self.config.actor.dist == 'onehot':
+      return common.OneHotDist(tf.zeros(shape))
+    else:
+      dist = tfd.Uniform(-tf.ones(shape), tf.ones(shape))
+      return tfd.Independent(dist, 1)
+    
+  def train(self, start, context, data):
+    metrics = {}
+    stoch = start['stoch']
+    if self.config.rssm.discrete:
+      stoch = tf.reshape(
+          stoch, stoch.shape[:-2] + (stoch.shape[-2] * stoch.shape[-1]))
+    ta
