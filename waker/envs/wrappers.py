@@ -685,4 +685,21 @@ class Async:
       raise Exception(stacktrace)
     if message == self._RESULT:
       return payload
-    raise KeyError('Received message
+    raise KeyError('Received message of unexpected type {}'.format(message))
+
+  def _worker(self, conn):
+    try:
+      ctor = cloudpickle.loads(self._pickled_ctor)
+      env = ctor()
+      conn.send((self._RESULT, None))  # Ready.
+      while True:
+        try:
+          # Only block for short times to have keyboard exceptions be raised.
+          if not conn.poll(0.1):
+            continue
+          message, payload = conn.recv()
+        except (EOFError, KeyboardInterrupt):
+          break
+        if message == self._ACCESS:
+          name = payload
+          result = getattr(env, 
