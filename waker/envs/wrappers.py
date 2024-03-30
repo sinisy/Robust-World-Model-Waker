@@ -641,4 +641,26 @@ class Async:
     return self._receive
 
   def close(self):
-    t
+    try:
+      self._conn.send((self._CLOSE, None))
+      self._conn.close()
+    except IOError:
+      pass  # The connection was already closed.
+    self._process.join(5)
+
+  @property
+  def obs_space(self):
+    if not self._obs_space:
+      self._obs_space = self.access('obs_space')()
+    return self._obs_space
+
+  @property
+  def act_space(self):
+    if not self._act_space:
+      self._act_space = self.access('act_space')()
+    return self._act_space
+
+  def step(self, action, blocking=False):
+    promise = self.call('step', action)
+    if blocking:
+      return pro
