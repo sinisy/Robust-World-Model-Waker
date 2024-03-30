@@ -702,4 +702,19 @@ class Async:
           break
         if message == self._ACCESS:
           name = payload
-          result = getattr(env, 
+          result = getattr(env, name)
+          conn.send((self._RESULT, result))
+          continue
+        if message == self._CALL:
+          name, args, kwargs = payload
+          result = getattr(env, name)(*args, **kwargs)
+          conn.send((self._RESULT, result))
+          continue
+        if message == self._CLOSE:
+          break
+        raise KeyError('Received message of unknown type {}'.format(message))
+    except Exception:
+      stacktrace = ''.join(traceback.format_exception(*sys.exc_info()))
+      print('Error in environment process: {}'.format(stacktrace))
+      conn.send((self._EXCEPTION, stacktrace))
+    fina
