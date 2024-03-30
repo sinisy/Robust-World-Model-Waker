@@ -717,4 +717,8 @@ class Async:
       stacktrace = ''.join(traceback.format_exception(*sys.exc_info()))
       print('Error in environment process: {}'.format(stacktrace))
       conn.send((self._EXCEPTION, stacktrace))
-    fina
+    finally:
+      try:
+        conn.close()
+      except IOError:
+        pass  # The connection was already closed.
