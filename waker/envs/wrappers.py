@@ -595,4 +595,28 @@ class RenderImage:
 
   def step(self, action):
     obs = self._env.step(action)
-    
+    obs[self._key] = self._env.render('rgb_array')
+    return obs
+
+  def reset(self):
+    obs = self._env.reset()
+    obs[self._key] = self._env.render('rgb_array')
+    return obs
+
+
+class Async:
+
+  # Message types for communication via the pipe.
+  _ACCESS = 1
+  _CALL = 2
+  _RESULT = 3
+  _CLOSE = 4
+  _EXCEPTION = 5
+
+  def __init__(self, constructor, strategy='thread'):
+    self._pickled_ctor = cloudpickle.dumps(constructor)
+    if strategy == 'process':
+      import multiprocessing as mp
+      context = mp.get_context('spawn')
+    elif strategy == 'thread':
+      import
