@@ -155,4 +155,7 @@ class ModelLoss(common.Module):
     return None, metrics
 
   def _intr_reward(self, seq):
-    reward = self.config.expl_intr_scale * self.head(s
+    reward = self.config.expl_intr_scale * self.head(seq['feat']).mode()
+    if self.config.expl_extr_scale:
+      reward += self.config.expl_extr_scale * self.reward(seq)
+    return reward
