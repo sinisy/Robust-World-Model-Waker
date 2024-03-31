@@ -94,4 +94,17 @@ class RandomExplore(common.Module):
     targets = tf.cast(targets, tf.float32)
     if self.config.disag_offset:
       targets = targets[:, self.config.disag_offset:]
-   
+      inputs = inputs[:, :-self.config.disag_offset]
+    targets = tf.stop_gradient(targets)
+    inputs = tf.stop_gradient(inputs)
+    with tf.GradientTape() as tape:
+      preds = [head(inputs) for head in self._networks]
+      loss = -sum([pred.log_prob(targets).mean() for pred in preds])
+    metrics = self.opt(tape, loss, self._networks)
+    return metrics
+
+class Plan2Explore(RandomExplore):
+
+  def __init__(self, config, act_space, wm, tfstep, reward):
+    super().__init__(config, act_space, wm, tfstep, reward)
+    self.ac = dreamerv2.ActorCritic(c
