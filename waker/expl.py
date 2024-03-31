@@ -79,4 +79,19 @@ class RandomExplore(common.Module):
     if self.config.disag_action_cond:
       action = tf.cast(seq['action'], inputs.dtype)
       inputs = tf.concat([inputs, action], -1)
-    preds = [h
+    preds = [head(inputs).mode() for head in self._networks]
+    disag = tf.tensor(preds).std(0).mean(-1)
+    if self.config.disag_log:
+      disag = tf.math.log(disag)
+    reward = self.config.expl_intr_scale * self.intr_rewnorm(disag)[0]
+    if self.config.expl_extr_scale:
+      reward += self.config.expl_extr_scale * self.extr_rewnorm(
+          self.reward(seq))[0]
+    return reward
+
+  def _train_ensemble(self, inputs, targets):
+    inputs = tf.cast(inputs, tf.float32)
+    targets = tf.cast(targets, tf.float32)
+    if self.config.disag_offset:
+      targets = targets[:, self.config.disag_offset:]
+   
