@@ -124,4 +124,21 @@ class Plan2Explore(RandomExplore):
     }[self.config.disag_target]
     inputs = context['feat']
     if self.config.disag_action_cond:
-      action = t
+      action = tf.cast(data['action'], inputs.dtype)
+      inputs = tf.concat([inputs, action], -1)
+    ac_metrics, training_seq = self.ac.train(
+        self.wm, start, data['is_terminal'], self._intr_reward)
+    ens_mets = self._train_ensemble(inputs, target)
+    metrics.update(ens_mets)
+    metrics.update(ac_metrics)
+    return None, metrics, training_seq
+
+class ModelLoss(common.Module):
+
+  def __init__(self, config, act_space, wm, tfstep, reward):
+    self.config = config
+    self.reward = reward
+    self.wm = wm
+    self.ac = dreamerv2.ActorCritic(config, act_space, tfstep)
+    self.actor = self.ac.actor
+    self.head = common
