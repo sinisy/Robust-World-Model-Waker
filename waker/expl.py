@@ -107,4 +107,21 @@ class Plan2Explore(RandomExplore):
 
   def __init__(self, config, act_space, wm, tfstep, reward):
     super().__init__(config, act_space, wm, tfstep, reward)
-    self.ac = dreamerv2.ActorCritic(c
+    self.ac = dreamerv2.ActorCritic(config, act_space, tfstep)
+    self.actor = self.ac.actor
+
+  def train(self, start, context, data):
+    metrics = {}
+    stoch = start['stoch']
+    if self.config.rssm.discrete:
+      stoch = tf.reshape(
+          stoch, stoch.shape[:-2] + (stoch.shape[-2] * stoch.shape[-1]))
+    target = {
+        'embed': context['embed'],
+        'stoch': stoch,
+        'deter': start['deter'],
+        'feat': context['feat'],
+    }[self.config.disag_target]
+    inputs = context['feat']
+    if self.config.disag_action_cond:
+      action = t
