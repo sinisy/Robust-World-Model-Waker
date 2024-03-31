@@ -64,4 +64,19 @@ class RandomExplore(common.Module):
     return None, metrics, training_seq
   
   @tf.function
-  def wm_s
+  def wm_sequence(self, world_model, start, is_terminal, reward_fn):
+    metrics = {}
+    hor = self.config.imag_horizon
+    seq = world_model.imagine(self.random_actor, start, is_terminal, hor)
+    reward = reward_fn(seq)
+    seq['reward'], mets1 = self.rewnorm(reward)
+    mets1 = {f'reward_{k}': v for k, v in mets1.items()}
+    metrics.update(**mets1)
+    return metrics, seq
+
+  def _intr_reward(self, seq):
+    inputs = seq['feat']
+    if self.config.disag_action_cond:
+      action = tf.cast(seq['action'], inputs.dtype)
+      inputs = tf.concat([inputs, action], -1)
+    preds = [h
