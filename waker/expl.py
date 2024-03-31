@@ -141,4 +141,18 @@ class ModelLoss(common.Module):
     self.wm = wm
     self.ac = dreamerv2.ActorCritic(config, act_space, tfstep)
     self.actor = self.ac.actor
-    self.head = common
+    self.head = common.MLP([], **self.config.expl_head)
+    self.opt = common.Optimizer('expl', **self.config.expl_opt)
+
+  def train(self, start, context, data):
+    metrics = {}
+    target = tf.cast(context[self.config.expl_model_loss], tf.float32)
+    with tf.GradientTape() as tape:
+      loss = -self.head(context['feat']).log_prob(target).mean()
+    metrics.update(self.opt(tape, loss, self.head))
+    metrics.update(self.ac.train(
+        self.wm, start, data['is_terminal'], self._intr_reward))
+    return None, metrics
+
+  def _intr_reward(self, seq):
+    reward = self.config.expl_intr_scale * self.head(s
